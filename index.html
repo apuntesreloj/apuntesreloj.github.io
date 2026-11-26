@@ -1,0 +1,1946 @@
+<!doctype html>
+<html lang="es">
+<title>WristNotes Pro</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Resume y adapta tus apuntes de estudio a pantallas de smartwatches rectangulares.">
+<meta name="theme-color" content="#06060b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Inter', 'system-ui', 'sans-serif'],
+          mono: ['JetBrains Mono', 'ui-monospace', 'monospace']
+        },
+        colors: {
+          ink: { 950: '#06060b', 900: '#0b0b14', 850: '#10101b', 800: '#151523', 700: '#1d1d30', 600: '#2a2a43' }
+        },
+        boxShadow: {
+          glow: '0 0 0 1px rgba(129,140,248,.35), 0 18px 50px -18px rgba(99,102,241,.55)'
+        }
+      }
+    }
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<style type="text/tailwindcss">
+  @layer components {
+    .card { @apply rounded-2xl border border-white/[0.06] bg-ink-900/70 backdrop-blur-xl shadow-xl shadow-black/40; }
+    .card-pad { @apply p-5 sm:p-6; }
+    .card-title { @apply flex items-center gap-3 text-[15px] font-semibold text-white; }
+    .icon-tile { @apply grid place-items-center w-9 h-9 shrink-0 rounded-xl bg-indigo-500/10 text-indigo-300 ring-1 ring-inset ring-indigo-400/20; }
+    .eyebrow { @apply inline-flex items-center gap-2 rounded-full border border-indigo-400/20 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-200; }
+    .label { @apply block text-[11px] font-semibold uppercase tracking-wider text-zinc-400; }
+    .input { @apply w-full rounded-xl border border-white/10 bg-ink-950/70 px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 outline-none transition-all duration-300 focus:border-indigo-400/60 focus:ring-4 focus:ring-indigo-500/15; }
+    .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-300 select-none focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500/30 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]; }
+    .btn-primary { @apply text-white bg-gradient-to-r from-indigo-500 to-violet-500 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/45 hover:brightness-110; }
+    .btn-soft { @apply text-zinc-200 bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] hover:border-white/20; }
+    .btn-danger { @apply text-rose-200 bg-rose-500/10 border border-rose-400/20 hover:bg-rose-500/20; }
+    .chip { @apply inline-flex items-center gap-1 rounded-full bg-white/[0.06] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-300; }
+    .stat { @apply rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5; }
+    .stat-k { @apply text-[10px] font-semibold uppercase tracking-wider text-zinc-500; }
+    .stat-v { @apply mt-0.5 font-mono text-sm font-semibold text-white; }
+  }
+</style>
+
+<style>
+  /* Diseño deliberadamente oscuro (un único tema). */
+  :root { color-scheme: dark; --ink: #06060b; --text: #e4e4e7; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    background:
+      radial-gradient(1100px 600px at 8% -12%, rgba(99,102,241,.20), transparent 60%),
+      radial-gradient(900px 520px at 108% 6%, rgba(139,92,246,.15), transparent 60%),
+      radial-gradient(800px 600px at 50% 125%, rgba(16,185,129,.08), transparent 60%),
+      var(--ink);
+    background-attachment: fixed;
+  }
+  /* Franja de la zona segura superior (muesca del teléfono) bajo la cabecera fija. */
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 50; background: var(--ink); }
+  .gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  @media (min-width: 640px) { .gutter { padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); } }
+  .app-header { top: env(safe-area-inset-top, 0px); }
+  .toasts-pos { bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); }
+  [hidden] { display: none !important; }
+  button, a, select, label { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  .bg-grid {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+    background-size: 44px 44px;
+    -webkit-mask-image: radial-gradient(ellipse at 50% 0%, #000 30%, transparent 75%);
+            mask-image: radial-gradient(ellipse at 50% 0%, #000 30%, transparent 75%);
+  }
+  ::selection { background: rgba(129,140,248,.35); }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:hover { background-color: rgba(255,255,255,.16); }
+
+  /* Vistas */
+  .view { display: none; }
+  .view.active { display: block; animation: viewIn .45s cubic-bezier(.2,.8,.2,1); }
+  .view.leaving { animation: viewOut .16s ease-in forwards; }
+  @keyframes viewIn { from { opacity: .35; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  @keyframes viewOut { to { opacity: .2; transform: translateY(-6px); } }
+
+  /* Sliders */
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 999px; outline: none; cursor: pointer;
+    background: linear-gradient(to right, #818cf8 0%, #a78bfa var(--p, 50%), #24243a var(--p, 50%)); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #fff;
+    box-shadow: 0 0 0 4px rgba(129,140,248,.35), 0 4px 10px rgba(0,0,0,.5); transition: box-shadow .2s, transform .2s; }
+  input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border: 0; border-radius: 50%; background: #fff; box-shadow: 0 0 0 4px rgba(129,140,248,.35), 0 4px 10px rgba(0,0,0,.5); }
+  input[type=range]:hover::-webkit-slider-thumb, input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 7px rgba(129,140,248,.30), 0 4px 10px rgba(0,0,0,.5); transform: scale(1.05); }
+
+  select.input { -webkit-appearance: none; appearance: none; padding-right: 2.5rem; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right .85rem center; }
+  select.input option { background: #10101b; color: #fff; }
+  input[type=number]::-webkit-inner-spin-button { opacity: .4; }
+
+  /* Skeleton */
+  .skeleton { position: relative; overflow: hidden; background: rgba(255,255,255,.04); }
+  .skeleton::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.07), transparent); animation: shimmer 1.4s infinite; }
+  @keyframes shimmer { to { transform: translateX(100%); } }
+  .spinner { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid rgba(255,255,255,.3); border-top-color: #fff; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Toasts */
+  .toast { animation: toastIn .35s cubic-bezier(.2,.8,.2,1) both; }
+  .toast-out { animation: toastOut .3s ease-in both; }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: none; } }
+  @keyframes toastOut { to { opacity: 0; transform: translateY(6px) scale(.97); } }
+
+  /* Reloj */
+  .wn-strap { background: linear-gradient(90deg, #12121b 0%, #232331 50%, #12121b 100%);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), inset 0 14px 24px rgba(0,0,0,.45); }
+  .wn-strap::after { content: ""; position: absolute; inset: 0; border-radius: inherit;
+    background: repeating-linear-gradient(180deg, transparent 0 9px, rgba(0,0,0,.18) 9px 10px); opacity: .5; }
+  .wn-case { background: linear-gradient(150deg, #4c4c5b 0%, #25252f 22%, #121218 60%, #08080c 100%);
+    box-shadow: 0 0 0 1px #000, inset 0 1px 1px rgba(255,255,255,.2), inset 0 -2px 6px rgba(0,0,0,.7),
+                0 40px 80px -30px rgba(0,0,0,.9), 0 24px 60px -24px rgba(99,102,241,.40); }
+  .wn-bezel { background: #030305; box-shadow: inset 0 0 0 1px rgba(255,255,255,.05); }
+  .wn-glass { pointer-events: none; background: linear-gradient(125deg, rgba(255,255,255,.11) 0%, rgba(255,255,255,.025) 26%, transparent 44%); }
+  .wn-crown { background: repeating-linear-gradient(180deg, #62626f 0 2px, #2a2a33 2px 4px); border-radius: 0 6px 6px 0;
+    box-shadow: inset -1px 0 1px rgba(255,255,255,.22), 2px 2px 6px rgba(0,0,0,.55); cursor: pointer; transition: transform .15s ease; }
+  .wn-crown:hover { filter: brightness(1.15); }
+  .wn-crown:active, .wn-crown.pressed { transform: translateX(-3px); }
+  .wn-btn2 { background: linear-gradient(90deg, #3d3d4a, #1b1b23); border-radius: 0 5px 5px 0; box-shadow: 2px 2px 5px rgba(0,0,0,.5); }
+  .wn-slot { touch-action: pan-y; cursor: grab; }
+  .wn-anim-next { animation: wnNext .32s cubic-bezier(.2,.8,.2,1) both; }
+  .wn-anim-prev { animation: wnPrev .32s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes wnNext { from { opacity: 0; transform: translateX(22px); } to { opacity: 1; transform: none; } }
+  @keyframes wnPrev { from { opacity: 0; transform: translateX(-22px); } to { opacity: 1; transform: none; } }
+  .stage-bg { background:
+      radial-gradient(closest-side at 50% 45%, rgba(99,102,241,.22), transparent 75%),
+      radial-gradient(closest-side at 50% 100%, rgba(16,185,129,.07), transparent 70%); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+</style>
+
+<div class="bg-grid" aria-hidden="true"></div>
+<div class="relative z-10 flex min-h-screen flex-col">
+
+  <!-- ============ CABECERA ============ -->
+  <header class="app-header sticky z-40 border-b border-white/[0.06] bg-ink-950/80 backdrop-blur-xl">
+    <div class="gutter mx-auto flex h-16 max-w-7xl items-center justify-between gap-3">
+      <a href="#dispositivo" data-go="1" class="flex items-center gap-2.5 shrink-0">
+        <span class="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/30">
+          <i data-icon="watch" class="w-5 h-5"></i>
+        </span>
+        <span class="hidden sm:flex items-baseline gap-1.5">
+          <span class="text-[15px] font-bold tracking-tight text-white">WristNotes</span>
+          <span class="rounded-md bg-white/10 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-indigo-200">PRO</span>
+        </span>
+      </a>
+
+      <nav id="stepper" class="flex items-center gap-1 sm:gap-2" aria-label="Progreso">
+        <button data-step="1" class="step group flex items-center gap-2 rounded-full px-2 py-1.5 sm:px-3 transition-all duration-300">
+          <span class="step-num grid h-6 w-6 place-items-center rounded-full text-[11px] font-bold transition-all duration-300">1</span>
+          <span class="step-label hidden md:inline text-xs font-semibold">Dispositivo</span>
+        </button>
+        <span class="h-px w-4 sm:w-8 bg-white/10"></span>
+        <button data-step="2" class="step group flex items-center gap-2 rounded-full px-2 py-1.5 sm:px-3 transition-all duration-300">
+          <span class="step-num grid h-6 w-6 place-items-center rounded-full text-[11px] font-bold transition-all duration-300">2</span>
+          <span class="step-label hidden md:inline text-xs font-semibold">Procesador</span>
+        </button>
+        <span class="h-px w-4 sm:w-8 bg-white/10"></span>
+        <button data-step="3" class="step group flex items-center gap-2 rounded-full px-2 py-1.5 sm:px-3 transition-all duration-300">
+          <span class="step-num grid h-6 w-6 place-items-center rounded-full text-[11px] font-bold transition-all duration-300">3</span>
+          <span class="step-label hidden md:inline text-xs font-semibold">Simulador</span>
+        </button>
+      </nav>
+
+      <button id="enginePill" data-go="1" class="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-zinc-300 transition-all duration-300 hover:border-white/20 shrink-0" title="Motor de procesamiento">
+        <span id="engineDot" class="h-2 w-2 rounded-full bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,.8)]"></span>
+        <span id="engineText" class="hidden sm:inline max-w-[180px] truncate">Modo simulado</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="gutter mx-auto w-full max-w-7xl flex-1 py-8 sm:py-10">
+
+    <!-- ===================================================== -->
+    <!-- MÓDULO 1 · DISPOSITIVO                                 -->
+    <!-- ===================================================== -->
+    <section id="view-device" class="view" aria-labelledby="t-device">
+      <div class="mb-8 flex flex-col gap-3">
+        <span class="eyebrow w-fit"><i data-icon="cpu" class="w-3.5 h-3.5"></i> Paso 1 de 3 · Perfil de hardware</span>
+        <h1 id="t-device" class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Configura tu reloj</h1>
+        <p class="max-w-2xl text-sm leading-relaxed text-zinc-400 sm:text-base">Elige el modelo de smartwatch, ajusta la tipografía a tu vista y conecta tu propia IA. Todo se guarda en este navegador.</p>
+      </div>
+
+      <div class="grid gap-6 lg:grid-cols-12">
+        <div class="space-y-6 lg:col-span-8">
+
+          <!-- Selector de reloj -->
+          <div class="card card-pad">
+            <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+              <h2 class="card-title"><span class="icon-tile"><i data-icon="watch" class="w-[18px] h-[18px]"></i></span>Modelo de smartwatch</h2>
+              <div class="w-full sm:w-80">
+                <label for="deviceSelect" class="sr-only">Modelo de reloj</label>
+                <select id="deviceSelect" class="input"></select>
+              </div>
+            </div>
+            <div id="deviceGrid" class="grid gap-3 sm:grid-cols-2"></div>
+
+            <div id="customPanel" class="mt-4 hidden rounded-xl border border-dashed border-indigo-400/25 bg-indigo-500/[0.04] p-4">
+              <p class="mb-3 flex items-center gap-2 text-xs font-medium text-indigo-200"><i data-icon="ruler" class="w-4 h-4"></i> Resolución personalizada (120 – 1000 px)</p>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label for="customW" class="label mb-1.5">Ancho (px)</label>
+                  <input id="customW" type="number" min="120" max="1000" step="1" class="input font-mono">
+                </div>
+                <div>
+                  <label for="customH" class="label mb-1.5">Alto (px)</label>
+                  <input id="customH" type="number" min="120" max="1000" step="1" class="input font-mono">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Parámetros visuales -->
+          <div class="card card-pad">
+            <h2 class="card-title mb-6"><span class="icon-tile"><i data-icon="sliders" class="w-[18px] h-[18px]"></i></span>Parámetros de adaptación visual</h2>
+            <div class="grid gap-6 md:grid-cols-3">
+              <div>
+                <div class="mb-3 flex items-center justify-between"><label for="fontRange" class="label">Fuente base</label><span id="fontVal" class="font-mono text-xs font-semibold text-indigo-200">14 px</span></div>
+                <input id="fontRange" type="range" min="12" max="18" step="1">
+                <div class="mt-2 flex justify-between text-[10px] text-zinc-500"><span>12</span><span>18</span></div>
+              </div>
+              <div>
+                <div class="mb-3 flex items-center justify-between"><label for="lhRange" class="label">Interlineado</label><span id="lhVal" class="font-mono text-xs font-semibold text-indigo-200">1.35</span></div>
+                <input id="lhRange" type="range" min="1.1" max="1.8" step="0.05">
+                <div class="mt-2 flex justify-between text-[10px] text-zinc-500"><span>Compacto</span><span>Aireado</span></div>
+              </div>
+              <div>
+                <div class="mb-3 flex items-center justify-between"><label for="marginRange" class="label">Margen de seguridad</label><span id="marginVal" class="font-mono text-xs font-semibold text-indigo-200">12 px</span></div>
+                <input id="marginRange" type="range" min="0" max="32" step="1">
+                <div class="mt-2 flex justify-between text-[10px] text-zinc-500"><span>0</span><span>32</span></div>
+              </div>
+            </div>
+            <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div class="stat"><div class="stat-k">Líneas / pantalla</div><div id="capLines" class="stat-v">—</div></div>
+              <div class="stat"><div class="stat-k">Caracteres / línea</div><div id="capCpl" class="stat-v">—</div></div>
+              <div class="stat"><div class="stat-k">Área útil</div><div id="capArea" class="stat-v">—</div></div>
+              <div class="stat"><div class="stat-k">Capacidad</div><div id="capChars" class="stat-v">—</div></div>
+            </div>
+          </div>
+
+          <!-- API Key -->
+          <div class="card card-pad">
+            <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+              <h2 class="card-title"><span class="icon-tile"><i data-icon="key" class="w-[18px] h-[18px]"></i></span>Motor de IA (opcional)</h2>
+              <span id="apiBadge" class="chip">Simulado</span>
+            </div>
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label for="providerSelect" class="label mb-1.5">Proveedor</label>
+                <select id="providerSelect" class="input">
+                  <option value="claude">Claude integrado (sin llave)</option>
+                  <option value="openai">OpenAI</option>
+                  <option value="gemini">Google Gemini</option>
+                </select>
+              </div>
+              <div>
+                <label for="modelSelect" class="label mb-1.5">Modelo</label>
+                <select id="modelSelect" class="input"></select>
+              </div>
+              <div id="customModelWrap" class="hidden sm:col-span-2">
+                <label for="customModel" class="label mb-1.5">Identificador del modelo</label>
+                <input id="customModel" type="text" class="input font-mono" placeholder="p. ej. gpt-4.1 o gemini-2.5-pro" autocomplete="off" spellcheck="false">
+              </div>
+              <div class="key-area sm:col-span-2">
+                <label for="apiKey" class="label mb-1.5">API Key</label>
+                <div class="relative">
+                  <input id="apiKey" type="password" class="input pr-12 font-mono" placeholder="sk-…" autocomplete="off" spellcheck="false">
+                  <button id="btnToggleKey" type="button" class="absolute right-1.5 top-1/2 -translate-y-1/2 grid h-9 w-9 place-items-center rounded-lg text-zinc-400 transition-all duration-300 hover:bg-white/5 hover:text-white" aria-label="Mostrar u ocultar la API Key">
+                    <i data-icon="eye" class="w-4 h-4"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <label class="key-area mt-4 flex cursor-pointer items-center gap-3 text-sm text-zinc-300">
+              <input id="rememberKey" type="checkbox" class="h-4 w-4 rounded border-white/20 bg-ink-950 accent-indigo-500">
+              Recordar la llave en este navegador <span class="text-zinc-500">(si se desmarca, solo dura esta pestaña)</span>
+            </label>
+            <div class="key-area mt-5 flex flex-wrap gap-2">
+              <button id="btnSaveKey" class="btn btn-primary"><i data-icon="save" class="w-4 h-4"></i>Guardar llave</button>
+              <button id="btnTestKey" class="btn btn-soft"><i data-icon="activity" class="w-4 h-4"></i>Probar conexión</button>
+              <button id="btnDeleteKey" class="btn btn-danger"><i data-icon="trash" class="w-4 h-4"></i>Eliminar</button>
+            </div>
+            <div id="apiStatus" class="mt-4 flex items-start gap-2.5 rounded-xl border px-3.5 py-3 text-xs leading-relaxed"></div>
+            <p class="key-area mt-3 flex items-start gap-2 text-[11px] leading-relaxed text-zinc-500"><i data-icon="shield" class="mt-0.5 w-3.5 h-3.5 shrink-0"></i>La llave solo se envía directamente al proveedor elegido. Se almacena sin cifrar en el almacenamiento local del navegador: no la uses en equipos compartidos.</p>
+          </div>
+        </div>
+
+        <!-- Columna derecha: vista previa -->
+        <aside class="lg:col-span-4">
+          <div class="space-y-6 lg:sticky lg:top-24">
+            <div class="card card-pad">
+              <div class="mb-4 flex items-center justify-between">
+                <h2 class="card-title"><span class="icon-tile"><i data-icon="eye" class="w-[18px] h-[18px]"></i></span>Vista previa en vivo</h2>
+                <span class="flex h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,.8)]"></span>
+              </div>
+              <div id="previewStage" class="stage-bg grid min-h-[340px] place-items-center rounded-xl py-4"></div>
+              <dl id="specList" class="mt-4 grid grid-cols-2 gap-2 text-xs"></dl>
+            </div>
+            <button id="btnToEditor" class="btn btn-primary group w-full py-3.5 text-[15px]">
+              Continuar al Procesador de Apuntes
+              <i data-icon="arrowRight" class="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"></i>
+            </button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <!-- MÓDULO 2 · EDITOR                                      -->
+    <!-- ===================================================== -->
+    <section id="view-editor" class="view" aria-labelledby="t-editor">
+      <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div class="flex flex-col gap-3">
+          <span class="eyebrow w-fit"><i data-icon="fileText" class="w-3.5 h-3.5"></i> Paso 2 de 3 · Ingesta de contenido</span>
+          <h1 id="t-editor" class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Procesa tus apuntes</h1>
+          <p class="max-w-2xl text-sm leading-relaxed text-zinc-400 sm:text-base">Pega apuntes, capítulos o resúmenes de clase. Los convertimos en tarjetas que caben exactamente en tu pantalla.</p>
+        </div>
+        <button data-go="1" class="flex w-fit items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-left transition-all duration-300 hover:border-indigo-400/40 hover:bg-indigo-500/5">
+          <span class="icon-tile h-8 w-8"><i data-icon="watch" class="w-4 h-4"></i></span>
+          <span>
+            <span id="edDevice" class="block text-xs font-semibold text-white">—</span>
+            <span class="block text-[11px] text-indigo-300">Cambiar reloj</span>
+          </span>
+        </button>
+      </div>
+
+      <div class="grid gap-6 lg:grid-cols-12">
+        <div class="lg:col-span-8">
+          <div class="card flex h-full flex-col overflow-hidden">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.06] px-4 py-3 sm:px-5">
+              <h2 class="flex items-center gap-2 text-sm font-semibold text-white"><i data-icon="fileText" class="w-4 h-4 text-indigo-300"></i>Área de trabajo</h2>
+              <div class="flex flex-wrap gap-1.5">
+                <button id="btnPaste" class="btn btn-soft px-3 py-1.5 text-xs"><i data-icon="clipboard" class="w-3.5 h-3.5"></i>Pegar</button>
+                <button id="btnSample" class="btn btn-soft px-3 py-1.5 text-xs"><i data-icon="sparkles" class="w-3.5 h-3.5"></i>Ejemplo</button>
+                <button id="btnClear" class="btn btn-soft px-3 py-1.5 text-xs"><i data-icon="trash" class="w-3.5 h-3.5"></i>Limpiar</button>
+              </div>
+            </div>
+            <label for="sourceText" class="sr-only">Texto de los apuntes</label>
+            <textarea id="sourceText" class="min-h-[380px] w-full flex-1 resize-y bg-transparent px-4 py-4 text-[15px] leading-relaxed text-zinc-100 placeholder-zinc-600 outline-none sm:min-h-[460px] sm:px-5" placeholder="Pega aquí tus apuntes…&#10;&#10;Consejo: los títulos en líneas cortas (sin punto final) y las listas con guiones se detectan automáticamente."></textarea>
+            <div class="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-white/[0.06] bg-white/[0.015] px-4 py-3 text-xs text-zinc-400 sm:px-5">
+              <span><b id="cntChars" class="font-mono text-zinc-100">0</b> caracteres</span>
+              <span><b id="cntWords" class="font-mono text-zinc-100">0</b> palabras</span>
+              <span><b id="cntSent" class="font-mono text-zinc-100">0</b> oraciones</span>
+              <span><b id="cntRead" class="font-mono text-zinc-100">0</b> min de lectura</span>
+              <span id="saveHint" class="ml-auto flex items-center gap-1.5 text-zinc-500 opacity-0 transition-opacity duration-300"><i data-icon="check" class="w-3.5 h-3.5 text-emerald-400"></i>Borrador guardado</span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="space-y-6 lg:col-span-4">
+          <div class="card card-pad">
+            <h2 class="card-title mb-4"><span class="icon-tile"><i data-icon="layers" class="w-[18px] h-[18px]"></i></span>Nivel de síntesis</h2>
+            <div id="levelOptions" class="space-y-2.5" role="radiogroup" aria-label="Nivel de síntesis"></div>
+          </div>
+
+          <div class="card card-pad">
+            <h2 class="card-title mb-4"><span class="icon-tile"><i data-icon="type" class="w-[18px] h-[18px]"></i></span>Líneas por pantalla</h2>
+            <label for="linesSelect" class="sr-only">Cantidad de líneas por pantalla</label>
+            <select id="linesSelect" class="input"></select>
+            <p id="linesHint" class="mt-3 text-xs leading-relaxed text-zinc-500"></p>
+          </div>
+
+          <div class="card card-pad">
+            <div class="mb-4 flex items-center justify-between text-xs">
+              <span class="text-zinc-400">Motor</span>
+              <span id="edEngine" class="flex items-center gap-2 font-semibold text-zinc-200"></span>
+            </div>
+            <button id="btnGenerate" class="btn btn-primary w-full py-3.5 text-[15px]">
+              <span id="genIcon"><i data-icon="sparkles" class="w-4 h-4"></i></span>
+              <span id="genLabel">Generar tarjetas</span>
+            </button>
+            <p id="genStatus" class="mt-3 min-h-[1rem] text-center text-xs text-zinc-500"></p>
+          </div>
+        </aside>
+      </div>
+
+      <!-- Resultados -->
+      <div id="resultsCard" class="card card-pad mt-6">
+        <div id="resultsArea"></div>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <!-- MÓDULO 3 · SIMULADOR                                   -->
+    <!-- ===================================================== -->
+    <section id="view-sim" class="view" aria-labelledby="t-sim">
+      <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div class="flex flex-col gap-3">
+          <span class="eyebrow w-fit"><i data-icon="sparkles" class="w-3.5 h-3.5"></i> Paso 3 de 3 · Pro View</span>
+          <h1 id="t-sim" class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Simulador de reloj</h1>
+          <p class="max-w-2xl text-sm leading-relaxed text-zinc-400 sm:text-base">Así se verán tus tarjetas en la muñeca. Desliza, usa las flechas del teclado o pulsa la corona.</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button data-go="2" class="btn btn-soft"><i data-icon="edit" class="w-4 h-4"></i>Editar contenido</button>
+          <button data-go="1" class="btn btn-soft"><i data-icon="watch" class="w-4 h-4"></i>Cambiar reloj</button>
+        </div>
+      </div>
+
+      <div id="simEmpty" class="card hidden px-6 py-16 text-center">
+        <div class="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-indigo-500/10 text-indigo-300 ring-1 ring-inset ring-indigo-400/20"><i data-icon="layers" class="w-7 h-7"></i></div>
+        <h2 class="mt-5 text-lg font-semibold text-white">Aún no hay tarjetas</h2>
+        <p class="mx-auto mt-2 max-w-sm text-sm text-zinc-400">Pega tus apuntes en el procesador y genera las tarjetas para verlas aquí.</p>
+        <button data-go="2" class="btn btn-primary mt-6"><i data-icon="fileText" class="w-4 h-4"></i>Ir al procesador</button>
+      </div>
+
+      <div id="simContent" class="grid gap-6 lg:grid-cols-12">
+        <div class="lg:col-span-7">
+          <div class="card overflow-hidden">
+            <div class="flex items-center justify-between border-b border-white/[0.06] px-5 py-3">
+              <span id="simDevice" class="text-xs font-semibold text-zinc-300">—</span>
+              <div class="flex rounded-lg border border-white/10 bg-ink-950/60 p-0.5" role="group" aria-label="Modo de pantalla">
+                <button id="themeDark" class="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all duration-300"><i data-icon="moon" class="w-3.5 h-3.5"></i>Oscuro</button>
+                <button id="themeLight" class="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all duration-300"><i data-icon="sun" class="w-3.5 h-3.5"></i>Claro</button>
+              </div>
+            </div>
+            <div id="watchStage" class="stage-bg grid min-h-[420px] place-items-center px-3 py-8"></div>
+            <div class="border-t border-white/[0.06] px-5 py-4">
+              <div class="flex items-center justify-between gap-4">
+                <button id="btnPrev" class="grid h-12 w-12 place-items-center rounded-full border border-white/10 bg-white/[0.04] text-white transition-all duration-300 hover:border-indigo-400/50 hover:bg-indigo-500/10 active:scale-95 disabled:opacity-30 disabled:pointer-events-none" aria-label="Tarjeta anterior"><i data-icon="chevronLeft" class="w-5 h-5"></i></button>
+                <div class="flex-1 text-center">
+                  <div id="pagerLabel" class="text-sm font-semibold text-white">Tarjeta 1 de 1</div>
+                  <div class="mx-auto mt-2 h-1.5 max-w-[240px] overflow-hidden rounded-full bg-white/[0.07]"><div id="pagerBar" class="h-full rounded-full bg-gradient-to-r from-indigo-400 to-violet-400 transition-all duration-300" style="width:0%"></div></div>
+                  <div class="mt-2 hidden text-[11px] text-zinc-500 sm:block">← → teclado · deslizar en la pantalla</div>
+                </div>
+                <button id="btnNext" class="grid h-12 w-12 place-items-center rounded-full border border-white/10 bg-white/[0.04] text-white transition-all duration-300 hover:border-indigo-400/50 hover:bg-indigo-500/10 active:scale-95 disabled:opacity-30 disabled:pointer-events-none" aria-label="Tarjeta siguiente"><i data-icon="chevronRight" class="w-5 h-5"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="space-y-6 lg:col-span-5">
+          <div class="card card-pad">
+            <h2 class="card-title mb-4"><span class="icon-tile"><i data-icon="image" class="w-[18px] h-[18px]"></i></span>Exportación y utilidades</h2>
+            <div class="grid grid-cols-2 gap-2.5">
+              <button id="btnCopy" class="btn btn-soft justify-start"><i data-icon="copy" class="w-4 h-4 text-indigo-300"></i>Copiar tarjeta</button>
+              <button id="btnCopyAll" class="btn btn-soft justify-start"><i data-icon="list" class="w-4 h-4 text-indigo-300"></i>Copiar todas</button>
+              <button id="btnPng" class="btn btn-primary col-span-2"><i data-icon="image" class="w-4 h-4"></i><span id="btnPngLabel">Exportar vista como imagen (PNG)</span></button>
+              <button id="btnPngAll" class="btn btn-soft col-span-2"><i data-icon="images" class="w-4 h-4 text-indigo-300"></i>Exportar todas las tarjetas (PNG)</button>
+            </div>
+            <p class="mt-3 text-[11px] leading-relaxed text-zinc-500">Las imágenes se generan a la resolución exacta del reloj, listas para pasarlas a la galería del teléfono y sincronizarlas.</p>
+          </div>
+
+          <div class="card card-pad">
+            <div class="mb-3 flex items-center justify-between">
+              <h2 class="text-sm font-semibold text-white">Contenido de la tarjeta</h2>
+              <span id="cardMeta" class="chip">—</span>
+            </div>
+            <pre id="cardText" class="max-h-48 overflow-auto whitespace-pre-wrap rounded-xl border border-white/[0.06] bg-ink-950/60 p-3.5 font-sans text-[13px] leading-relaxed text-zinc-300"></pre>
+          </div>
+
+          <div class="card overflow-hidden">
+            <div class="flex items-center justify-between border-b border-white/[0.06] px-5 py-3">
+              <h2 class="text-sm font-semibold text-white">Índice de tarjetas</h2>
+              <span id="simInfo" class="text-[11px] text-zinc-500"></span>
+            </div>
+            <ol id="cardIndex" class="max-h-72 overflow-auto p-2"></ol>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-white/[0.05] py-6">
+    <div class="gutter mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 text-xs text-zinc-500 sm:flex-row">
+      <span>WristNotes Pro · estudia en la muñeca</span>
+      <span class="flex items-center gap-1.5"><i data-icon="shield" class="w-3.5 h-3.5"></i>Tus datos se guardan solo en este navegador</span>
+    </div>
+  </footer>
+</div>
+
+<div id="toasts" class="toasts-pos pointer-events-none fixed inset-x-4 z-50 flex flex-col items-center gap-2 sm:inset-x-auto sm:right-6 sm:items-end"></div>
+<div id="exportHost" aria-hidden="true" style="position:fixed;left:-12000px;top:0;pointer-events:none"></div>
+
+<!-- Visor de imagen (para guardar con pulsación larga en el teléfono) -->
+<div id="imgModal" hidden class="fixed inset-0 z-[60] grid place-items-center bg-black/80 p-4 backdrop-blur-sm">
+  <div class="card w-full max-w-sm p-4 text-center">
+    <div class="mb-3 flex items-center justify-between">
+      <h2 id="imgModalTitle" class="text-sm font-semibold text-white">Imagen lista</h2>
+      <button id="imgModalClose" class="grid h-8 w-8 place-items-center rounded-lg text-zinc-400 hover:bg-white/5 hover:text-white" aria-label="Cerrar">✕</button>
+    </div>
+    <p class="mb-3 text-xs leading-relaxed text-zinc-400">Mantén pulsada cada imagen y elige <b class="text-zinc-200">«Guardar imagen»</b> para añadirla a la galería del teléfono.</p>
+    <div id="imgModalList" class="flex max-h-[62vh] flex-col items-center gap-3 overflow-y-auto"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  /* ======================================================================
+     Utilidades
+     ====================================================================== */
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const cap = s => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+  const deaccent = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+  const timeNow = () => { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+  const HB = '‐'; // guion de corte forzado
+
+  const ICONS = {
+    watch: '<rect x="6" y="5" width="12" height="14" rx="3"/><path d="M9 5V2.5h6V5M9 19v2.5h6V19"/><path d="M18.5 10.5h1"/><path d="M12 9.5v2.5l1.5 1"/>',
+    sliders: '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M2 14h4M10 8h4M18 16h4"/>',
+    key: '<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/>',
+    eye: '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+    eyeOff: '<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.4 10.4 0 0 1 12 5c7 0 10 7 10 7a13.2 13.2 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.5 13.5 0 0 0 2 12s3 7 10 7a9.7 9.7 0 0 0 5.39-1.61"/><path d="M2 2l20 20"/>',
+    arrowRight: '<path d="M5 12h14M12 5l7 7-7 7"/>',
+    chevronLeft: '<path d="m15 18-6-6 6-6"/>',
+    chevronRight: '<path d="m9 18 6-6-6-6"/>',
+    sparkles: '<path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/>',
+    copy: '<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+    image: '<rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>',
+    images: '<path d="M18 22H4a2 2 0 0 1-2-2V6"/><path d="m22 13-1.3-1.3a2.4 2.4 0 0 0-3.4 0L11 18"/><circle cx="12" cy="8" r="2"/><rect width="16" height="16" x="6" y="2" rx="2"/>',
+    edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>',
+    moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+    trash: '<path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>',
+    clipboard: '<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>',
+    fileText: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4M10 9H8M16 13H8M16 17H8"/>',
+    zap: '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>',
+    list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+    help: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/>',
+    check: '<path d="M20 6 9 17l-5-5"/>',
+    activity: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+    save: '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/>',
+    shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+    info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
+    alert: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/>',
+    cpu: '<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2M15 20v2M2 15h2M2 9h2M20 15h2M20 9h2M9 2v2M9 20v2"/>',
+    ruler: '<path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.4 2.4 0 0 1 0-3.4l2.6-2.6a2.4 2.4 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2M11.5 9.5l2-2M8.5 6.5l2-2M17.5 15.5l2-2"/>',
+    type: '<path d="M4 7V4h16v3M9 20h6M12 4v16"/>',
+    layers: '<path d="m12 2 10 5-10 5L2 7Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/>'
+  };
+  const icon = (n, cls = 'w-4 h-4') => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ''}</svg>`;
+  const hydrateIcons = (root = document) => $$('i[data-icon]', root).forEach(el => { el.outerHTML = icon(el.dataset.icon, el.className || 'w-4 h-4'); });
+
+  /* ======================================================================
+     Persistencia
+     ====================================================================== */
+  const Store = {
+    get(k, fb, area = 'local') { try { const s = area === 'local' ? localStorage : sessionStorage; const v = s.getItem('wn.' + k); return v == null ? fb : JSON.parse(v); } catch { return fb; } },
+    set(k, v, area = 'local') { try { (area === 'local' ? localStorage : sessionStorage).setItem('wn.' + k, JSON.stringify(v)); return true; } catch { return false; } },
+    del(k, area = 'local') { try { (area === 'local' ? localStorage : sessionStorage).removeItem('wn.' + k); } catch { /* almacenamiento no disponible */ } }
+  };
+
+  /* ======================================================================
+     Catálogos
+     ====================================================================== */
+  const DEVICES = {
+    fit:    { id: 'fit',    name: 'Huawei Watch Fit', short: 'Watch Fit', w: 280, h: 456, diag: '1,64"', ppi: 326, panel: 'AMOLED', tag: 'Texto corto', note: 'Densidad optimizada para texto corto.' },
+    fit2:   { id: 'fit2',   name: 'Huawei Watch Fit 2', short: 'Watch Fit 2', w: 336, h: 480, diag: '1,74"', ppi: 336, panel: 'AMOLED', tag: 'Panorámico', note: 'Formato panorámico: más caracteres por línea.' },
+    gt:     { id: 'gt',     name: 'Huawei Watch GT Rectangular / Banda Pro', short: 'GT Rect. / Banda Pro', w: 240, h: 400, diag: '1,47"', ppi: 282, panel: 'AMOLED', tag: 'Compacto', note: 'Pantalla estrecha, ideal para viñetas mínimas.' },
+    custom: { id: 'custom', name: 'Pantalla Genérica Rectangular Personalizada', short: 'Personalizada', w: 300, h: 450, diag: '—', ppi: null, panel: 'Genérica', tag: 'Manual', note: 'Define ancho y alto exactos en píxeles.' }
+  };
+  /* Entorno: versión publicada (visor de Claude) o archivo HTML local. */
+  const ENV = { published: !!(window.claude && typeof window.claude.use === 'function') };
+  const caps = { sample: null, downloads: null };
+
+  const PROVIDERS = {
+    claude: { label: 'Claude', models: ['quick', 'default', 'complex'], names: { quick: 'Rápido (recomendado)', default: 'Equilibrado', complex: 'Máxima calidad' }, hint: '' },
+    openai: { label: 'OpenAI', models: ['gpt-4o-mini', 'gpt-4o', 'gpt-4.1-mini', 'gpt-4.1-nano'], hint: 'sk-…' },
+    gemini: { label: 'Gemini', models: ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-1.5-pro'], hint: 'AIza…' }
+  };
+  const modelName = () => (state.api.provider === 'claude' ? PROVIDERS.claude.names[state.api.model].replace(/ \(.*\)$/, '') : activeModel());
+  const LEVELS = {
+    points:  { label: 'Puntos clave ultracortos', desc: 'Ideas telegráficas de 1–2 líneas.', icon: 'zap', short: 'Clave' },
+    bullets: { label: 'Viñetas estructuradas', desc: 'Agrupadas por tema con títulos.', icon: 'list', short: 'Viñetas' },
+    qa:      { label: 'Preguntas y respuestas', desc: 'Flashcards para autoevaluarte.', icon: 'help', short: 'P & R' }
+  };
+  const THEMES = {
+    dark:  { bg: '#000000', fg: '#F4F4F6', soft: '#CFCFD8', muted: '#8B8B97', accent: '#A5B4FC', accent2: '#6EE7B7', heading: '#C4B5FD', track: 'rgba(255,255,255,0.14)' },
+    light: { bg: '#FAFAF7', fg: '#111114', soft: '#34343C', muted: '#6B6B76', accent: '#4F46E5', accent2: '#047857', heading: '#6D28D9', track: 'rgba(0,0,0,0.10)' }
+  };
+  const WEIGHTS = { h: 700, p: 500, b: 400, q: 600, a: 400 };
+
+  const SAMPLE_ITEMS = [
+    { type: 'heading', text: 'Fotosíntesis' },
+    { type: 'bullet', text: 'Convierte la luz solar en energía química almacenada como glucosa.' },
+    { type: 'bullet', text: 'Ocurre en los cloroplastos gracias a la clorofila.' },
+    { type: 'bullet', text: 'Libera oxígeno como subproducto esencial para la vida.' },
+    { type: 'bullet', text: 'Tiene dos etapas: fase luminosa y ciclo de Calvin.' }
+  ];
+
+  const SAMPLE_TEXT = `La célula: unidad básica de la vida
+
+Teoría celular
+La teoría celular establece que todos los seres vivos están formados por una o más células. La célula es la unidad estructural y funcional más pequeña capaz de realizar las funciones vitales: nutrición, relación y reproducción. Esta teoría fue formulada en 1839 por Schleiden y Schwann, y completada por Virchow en 1855 al afirmar que toda célula procede de otra célula.
+
+Tipos de células
+Las células procariotas son más simples y carecen de núcleo definido; su material genético se encuentra disperso en el citoplasma, en una región llamada nucleoide. Las bacterias son el ejemplo más conocido de organismos procariotas. Las células eucariotas, en cambio, poseen un núcleo rodeado por una membrana nuclear y contienen orgánulos especializados. Animales, plantas, hongos y protistas están formados por células eucariotas.
+
+Orgánulos principales
+- La membrana plasmática regula el intercambio de sustancias entre la célula y su entorno.
+- Las mitocondrias producen la mayor parte de la energía celular en forma de ATP mediante la respiración celular.
+- Los ribosomas sintetizan proteínas a partir de la información del ARN mensajero.
+- El retículo endoplasmático rugoso participa en la síntesis y el transporte de proteínas.
+- El aparato de Golgi modifica, empaqueta y distribuye las proteínas y los lípidos.
+- Los cloroplastos, presentes solo en células vegetales, realizan la fotosíntesis.
+
+Diferencias entre célula animal y vegetal
+La célula vegetal tiene pared celular de celulosa, cloroplastos y una gran vacuola central que mantiene la presión interna. La célula animal carece de pared celular, presenta vacuolas pequeñas y contiene centriolos, que intervienen en la división celular. Ambas comparten núcleo, mitocondrias, ribosomas y aparato de Golgi.`;
+
+  /* ======================================================================
+     Estado
+     ====================================================================== */
+  const state = {
+    deviceId: Store.get('device', 'fit'),
+    custom: Store.get('custom', { w: 300, h: 450 }),
+    visual: Object.assign({ font: 14, lh: 1.35, margin: 12 }, Store.get('visual', {})),
+    api: Object.assign({ provider: 'openai', model: 'gpt-4o-mini', customModel: '', remember: true }, Store.get('api', {})),
+    keys: { openai: '', gemini: '' },
+    draft: Object.assign({ text: '', level: 'bullets', lines: 'auto' }, Store.get('draft', {})),
+    result: Object.assign({ items: [], engine: null, level: null, lang: 'es', createdAt: null }, Store.get('result', {})),
+    pages: [],
+    index: Store.get('index', 0),
+    screenTheme: Store.get('screenTheme', 'dark'),
+    view: 1,
+    busy: false
+  };
+  if (!DEVICES[state.deviceId]) state.deviceId = 'fit';
+  // En la versión publicada el visor bloquea conexiones externas: solo Claude integrado.
+  // En el archivo local no existe Claude integrado: OpenAI o Gemini con llave propia.
+  if (ENV.published) state.api.provider = 'claude';
+  else if (!PROVIDERS[state.api.provider] || state.api.provider === 'claude') state.api.provider = 'openai';
+  {
+    const p = PROVIDERS[state.api.provider];
+    if (!p.models.includes(state.api.model) && !(state.api.provider !== 'claude' && state.api.model === '__custom')) state.api.model = p.models[0];
+  }
+  if (!LEVELS[state.draft.level]) state.draft.level = 'bullets';
+  state.keys = Object.assign({ openai: '', gemini: '' }, Store.get('apiKeys', {}, 'session'), Store.get('apiKeys', {}, 'local'));
+
+  const getDevice = () => {
+    const d = DEVICES[state.deviceId];
+    return d.id === 'custom' ? { ...d, w: state.custom.w, h: state.custom.h } : d;
+  };
+  const activeModel = () => (state.api.model === '__custom' ? (state.api.customModel || '').trim() : state.api.model);
+  const providerUsable = p => (p === 'claude' ? !!caps.sample : !ENV.published);
+  const aiReady = () => {
+    const p = state.api.provider;
+    if (!providerUsable(p)) return false;
+    return p === 'claude' ? true : !!(state.keys[p] || '').trim() && !!activeModel();
+  };
+
+  /* ======================================================================
+     Medición tipográfica y maquetación
+     ====================================================================== */
+  const Measure = (() => {
+    const ctx = document.createElement('canvas').getContext('2d');
+    const font = (size, weight) => `${weight} ${size}px Inter, system-ui, sans-serif`;
+    return {
+      font,
+      width(text, size, weight = 400) { ctx.font = font(size, weight); return ctx.measureText(text).width; }
+    };
+  })();
+
+  function wrap(text, maxW, size, weight) {
+    const words = String(text).split(/\s+/).filter(Boolean);
+    const lines = [];
+    let cur = '';
+    for (const w of words) {
+      const test = cur ? cur + ' ' + w : w;
+      if (Measure.width(test, size, weight) <= maxW) { cur = test; continue; }
+      if (cur) { lines.push(cur); cur = ''; }
+      if (Measure.width(w, size, weight) > maxW) {
+        let chunk = '';
+        for (const ch of w) {
+          if (chunk && Measure.width(chunk + ch + HB, size, weight) > maxW) { lines.push(chunk + HB); chunk = ch; }
+          else chunk += ch;
+        }
+        cur = chunk;
+      } else cur = w;
+    }
+    if (cur) lines.push(cur);
+    return lines;
+  }
+
+  function computeLayout({ forceAuto = false } = {}) {
+    const d = getDevice();
+    const { font, lh, margin } = state.visual;
+    const lineH = Math.round(font * lh * 100) / 100;
+    const metaFont = Math.max(9, Math.round(font * 0.72));
+    const statusH = Math.round(metaFont * 1.3 + 8);
+    const footerH = Math.round(metaFont * 1.3 + 14);
+    const contentW = Math.max(40, d.w - margin * 2);
+    const contentH = Math.max(lineH * 2, d.h - margin * 2 - statusH - footerH);
+    const maxLines = Math.max(2, Math.floor(contentH / lineH));
+    const req = state.draft.lines;
+    const lines = forceAuto || req === 'auto' ? maxLines : Math.min(parseInt(req, 10) || maxLines, maxLines);
+    const avg = Measure.width('La teoría celular establece que todos los seres vivos', font, 400) / 53;
+    const cpl = Math.max(8, Math.floor(contentW / avg));
+    return { device: d, w: d.w, h: d.h, font, lhRatio: lh, lineH, margin, metaFont, statusH, footerH, contentW, contentH, maxLines, lines, cpl, capacity: cpl * lines };
+  }
+
+  function buildBlocks(items, L) {
+    const f = L.font;
+    const markInd = Math.ceil(Math.max(...['P', 'R', 'Q', 'A'].map(m => Measure.width(m, f, 700))) + f * 0.55);
+    const dotInd = Math.ceil(Measure.width('•', f, 700) + f * 0.6);
+    const blocks = [];
+    let pendingHeading = null;
+    for (const it of items) {
+      if (it.type === 'heading') {
+        const hl = wrap(it.text, L.contentW, f, WEIGHTS.h).map((t, i) => ({ t, k: 'h', s: i === 0, ind: 0 }));
+        pendingHeading = (pendingHeading || []).concat(hl);
+        continue;
+      }
+      let lines;
+      if (it.type === 'qa') {
+        const ql = wrap(it.q, L.contentW - markInd, f, WEIGHTS.q).map((t, i) => ({ t, k: 'q', s: i === 0, ind: markInd }));
+        const al = wrap(it.a, L.contentW - markInd, f, WEIGHTS.a).map((t, i) => ({ t, k: 'a', s: i === 0, ind: markInd }));
+        lines = ql.concat(al);
+      } else {
+        const k = it.type === 'point' ? 'p' : 'b';
+        lines = wrap(it.text, L.contentW - dotInd, f, WEIGHTS[k]).map((t, i) => ({ t, k, s: i === 0, ind: dotInd }));
+      }
+      if (pendingHeading) { lines = pendingHeading.concat(lines); pendingHeading = null; }
+      blocks.push(lines);
+    }
+    if (pendingHeading) blocks.push(pendingHeading);
+    return blocks;
+  }
+
+  function paginate(items, L) {
+    const capL = L.lines;
+    const pages = [];
+    let cur = [], used = 0;
+    const flush = () => { if (cur.length) { pages.push({ blocks: cur }); cur = []; used = 0; } };
+    for (const lines of buildBlocks(items, L)) {
+      const n = lines.length;
+      if (used + n <= capL) { cur.push({ lines }); used += n; continue; }
+      if (n <= capL) { flush(); cur.push({ lines }); used = n; continue; }
+      if (capL - used < 2) flush();
+      const rest = lines.slice();
+      while (rest.length) {
+        const take = rest.splice(0, capL - used);
+        cur.push({ lines: take });
+        used += take.length;
+        if (rest.length) flush();
+      }
+    }
+    flush();
+    return pages;
+  }
+
+  function repaginate() {
+    const items = state.result.items || [];
+    state.pages = items.length ? paginate(items, computeLayout()) : [];
+    state.index = clamp(state.index, 0, Math.max(0, state.pages.length - 1));
+  }
+
+  const lineCount = page => page.blocks.reduce((a, b) => a + b.lines.length, 0);
+  function blockGap(page, L) {
+    const nb = page.blocks.length;
+    if (nb < 2) return 0;
+    const slack = L.contentH - lineCount(page) * L.lineH;
+    return Math.max(0, Math.floor(Math.min(L.lineH * 0.6, slack / (nb - 1))));
+  }
+
+  function lineStyle(k, T, lang) {
+    const en = lang === 'en';
+    switch (k) {
+      case 'h': return { weight: WEIGHTS.h, color: T.heading, marker: null };
+      case 'p': return { weight: WEIGHTS.p, color: T.fg, marker: '•', markColor: T.accent };
+      case 'q': return { weight: WEIGHTS.q, color: T.fg, marker: en ? 'Q' : 'P', markColor: T.accent };
+      case 'a': return { weight: WEIGHTS.a, color: T.soft, marker: en ? 'A' : 'R', markColor: T.accent2 };
+      default:  return { weight: WEIGHTS.b, color: T.fg, marker: '•', markColor: T.accent };
+    }
+  }
+
+  function joinLines(parts) {
+    return parts.reduce((acc, p) => (acc.endsWith(HB) ? acc.slice(0, -1) + p : acc ? acc + ' ' + p : p), '');
+  }
+  function pageToText(page, lang) {
+    const en = lang === 'en';
+    const out = [];
+    page.blocks.forEach(b => {
+      const segs = [];
+      b.lines.forEach(l => {
+        const last = segs[segs.length - 1];
+        if (l.s || !last || last.k !== l.k) segs.push({ k: l.k, parts: [l.t] });
+        else last.parts.push(l.t);
+      });
+      segs.forEach(sg => {
+        const t = joinLines(sg.parts);
+        out.push(sg.k === 'h' ? `■ ${t}` : sg.k === 'q' ? `${en ? 'Q' : 'P'}: ${t}` : sg.k === 'a' ? `${en ? 'A' : 'R'}: ${t}` : `• ${t}`);
+      });
+    });
+    return out.join('\n');
+  }
+
+  /* ======================================================================
+     Renderizado de pantalla y reloj
+     ====================================================================== */
+  function batterySVG(T, size) {
+    return `<svg width="${Math.round(size * 2)}" height="${Math.round(size)}" viewBox="0 0 22 11" style="display:block"><rect x="0.5" y="0.5" width="18" height="10" rx="2.5" fill="none" stroke="${T.muted}"/><rect x="2" y="2" width="12" height="7" rx="1.3" fill="${T.accent2}"/><rect x="19.6" y="3.5" width="1.9" height="4" rx="0.9" fill="${T.muted}"/></svg>`;
+  }
+
+  function screenHTML(page, L, { theme = 'dark', index = 0, total = 1, lang = 'es', level = 'bullets', anim = '', time = timeNow() } = {}) {
+    const T = THEMES[theme];
+    const m = L.margin;
+    const pct = total ? Math.round(((index + 1) / total) * 100) : 0;
+    const gap = page ? blockGap(page, L) : 0;
+    let content = '';
+    if (page) {
+      content = page.blocks.map((b, bi) => {
+        const rows = b.lines.map(l => {
+          const st = lineStyle(l.k, T, lang);
+          const mk = l.s && st.marker ? `<span style="position:absolute;left:0;top:0;font-weight:700;color:${st.markColor}">${st.marker}</span>` : '';
+          return `<div style="position:relative;height:${L.lineH}px;line-height:${L.lineH}px;white-space:nowrap;overflow:hidden;padding-left:${l.ind}px;font-size:${L.font}px;font-weight:${st.weight};color:${st.color}">${mk}${esc(l.t)}</div>`;
+        }).join('');
+        return `<div style="margin-top:${bi ? gap : 0}px">${rows}</div>`;
+      }).join('');
+    }
+    const levelTxt = (LEVELS[level] || LEVELS.bullets).short;
+    return `<div class="wn-screen" style="position:relative;width:${L.w}px;height:${L.h}px;background:${T.bg};color:${T.fg};font-family:Inter,system-ui,sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased">
+      <div style="position:absolute;left:${m}px;right:${m}px;top:${m}px;height:${L.statusH}px;display:flex;align-items:center;justify-content:space-between;font-size:${L.metaFont}px;font-weight:600;color:${T.muted};line-height:1">
+        <span data-clock>${time}</span>${batterySVG(T, L.metaFont)}
+      </div>
+      <div class="${anim}" style="position:absolute;left:${m}px;top:${m + L.statusH}px;width:${L.contentW}px;height:${L.contentH}px;overflow:hidden">${content}</div>
+      <div style="position:absolute;left:${m}px;right:${m}px;bottom:${m}px;height:${L.footerH}px;display:flex;flex-direction:column;justify-content:flex-end;gap:6px">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:${L.metaFont}px;font-weight:600;color:${T.muted};line-height:1">
+          <span>Tarjeta ${index + 1} de ${total}</span><span style="color:${T.accent}">${levelTxt}</span>
+        </div>
+        <div style="height:3px;border-radius:3px;background:${T.track};overflow:hidden"><div style="width:${pct}%;height:100%;border-radius:3px;background:${T.accent}"></div></div>
+      </div>
+    </div>`;
+  }
+
+  function watchGeometry(L) {
+    const w = L.w, h = L.h, mn = Math.min(w, h);
+    const screenR = Math.round(mn * 0.15);
+    const bezel = Math.round(mn * 0.05) + 8;
+    const caseW = w + bezel * 2, caseH = h + bezel * 2, caseR = screenR + bezel;
+    const strapW = Math.round(caseW * 0.72), strapH = Math.round(caseH * 0.2);
+    const crown = 9;
+    return { w, h, screenR, bezel, caseW, caseH, caseR, strapW, strapH, crown, caseTop: strapH, totalW: caseW + crown, totalH: caseH + strapH * 2 };
+  }
+
+  function watchHTML(L, inner) {
+    const g = watchGeometry(L);
+    const sl = Math.round((g.caseW - g.strapW) / 2);
+    const sr = Math.round(g.strapW * 0.18);
+    const hole = Math.max(6, Math.round(g.strapW * 0.05));
+    const holes = Array.from({ length: 3 }, (_, i) =>
+      `<span style="position:absolute;z-index:1;left:50%;transform:translateX(-50%);top:${Math.round(g.caseR + g.strapH * 0.22 + i * g.strapH * 0.22)}px;width:${hole}px;height:${hole}px;border-radius:50%;background:#050508;box-shadow:inset 0 1px 2px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.06)"></span>`).join('');
+    const ring = Math.round(g.bezel * 0.35);
+    return `<div style="position:relative;width:${g.totalW}px;height:${g.totalH}px">
+      <div class="wn-strap" style="position:absolute;left:${sl}px;top:0;width:${g.strapW}px;height:${g.strapH + g.caseR}px;border-radius:${sr}px ${sr}px 0 0"></div>
+      <div class="wn-strap" style="position:absolute;left:${sl}px;top:${g.caseTop + g.caseH - g.caseR}px;width:${g.strapW}px;height:${g.strapH + g.caseR}px;border-radius:0 0 ${sr}px ${sr}px">${holes}</div>
+      <div class="wn-crown" data-crown title="Siguiente tarjeta" style="position:absolute;left:${g.caseW - 4}px;top:${Math.round(g.caseTop + g.caseH * 0.24)}px;width:${g.crown + 4}px;height:${Math.round(g.caseH * 0.12)}px"></div>
+      <div class="wn-btn2" style="position:absolute;left:${g.caseW - 4}px;top:${Math.round(g.caseTop + g.caseH * 0.42)}px;width:${g.crown + 1}px;height:${Math.round(g.caseH * 0.07)}px"></div>
+      <div class="wn-case" style="position:absolute;left:0;top:${g.caseTop}px;width:${g.caseW}px;height:${g.caseH}px;border-radius:${g.caseR}px">
+        <div class="wn-bezel" style="position:absolute;inset:${ring}px;border-radius:${g.caseR - ring}px"></div>
+        <div class="wn-slot" data-slot style="position:absolute;left:${g.bezel}px;top:${g.bezel}px;width:${g.w}px;height:${g.h}px;border-radius:${g.screenR}px;overflow:hidden;transform:translateZ(0)">${inner}</div>
+        <div class="wn-glass" style="position:absolute;left:${g.bezel}px;top:${g.bezel}px;width:${g.w}px;height:${g.h}px;border-radius:${g.screenR}px"></div>
+      </div>
+    </div>`;
+  }
+
+  function mountWatch(stage, L, inner, { maxH = 600, maxScale = 1 } = {}) {
+    const g = watchGeometry(L);
+    const availW = Math.max(120, stage.clientWidth - 24);
+    const s = Math.max(0.2, Math.min(maxScale, availW / g.totalW, maxH / g.totalH));
+    stage.innerHTML = `<div style="position:relative;width:${g.totalW * s}px;height:${g.totalH * s}px"><div style="position:absolute;left:0;top:0;transform:scale(${s});transform-origin:0 0">${watchHTML(L, inner)}</div></div>`;
+    return s;
+  }
+
+  function thumbHTML(page, L, i, total, width) {
+    const s = width / L.w;
+    const opts = { theme: state.screenTheme, index: i, total, lang: state.result.lang, level: state.result.level };
+    return `<div class="overflow-hidden rounded-xl ring-1 ring-white/10" style="width:${L.w * s}px;height:${L.h * s}px"><div style="transform:scale(${s});transform-origin:0 0;width:${L.w}px;height:${L.h}px">${screenHTML(page, L, opts)}</div></div>`;
+  }
+
+  /* ======================================================================
+     Motor local de síntesis (sin API)
+     ====================================================================== */
+  const Summarizer = (() => {
+    const STOP = new Set(('a al algo algun alguna algunas alguno algunos ante antes aqui asi aun cada como con contra cual cuales cuando de del desde donde dos el ella ellas ellos en entre era eran es esa esas ese eso esos esta estaba estado estan estar este esto estos fue fueron ha hace hacia han hasta hay la las le les lo los mas me mi mientras mismo muy nada ni no nos o otra otras otro otros para pero poco por porque que quien se sea segun ser si sido siempre sin sobre su sus tal tambien tanto te tiene tienen todo todos toda todas tu un una uno unos unas y ya yo sera seran puede pueden cuya cuyo dicho dicha ' +
+      'the of and to in is are was were be been being a an for on with as by at from that this these those it its or not but which who whom can will would should may might has have had do does did into than then there their they them we you he she his her our your also more most such only other some any each very about over under between both').split(' '));
+    const LEAD = /^(además|asimismo|por otro lado|por otra parte|en primer lugar|en segundo lugar|en tercer lugar|finalmente|por último|en conclusión|en resumen|es decir|o sea|de hecho|en este sentido|por lo tanto|por consiguiente|así pues|también|no obstante|en general|básicamente|cabe destacar que|cabe mencionar que|es importante (?:destacar|señalar|mencionar|recordar) que|hay que tener en cuenta que|furthermore|moreover|in addition|additionally|therefore|thus|in conclusion|finally|also|basically|in fact|it is important to note that)\s*,?\s+/i;
+    const FILLER = /\b(muy|realmente|básicamente|simplemente|actualmente|prácticamente|really|very|basically|actually|simply)\s+/gi;
+    const tokens = s => (s.toLowerCase().match(/[\p{L}\p{N}]+/gu) || []);
+    const isStop = w => STOP.has(deaccent(w.toLowerCase()));
+    const content = s => tokens(s).filter(w => w.length > 2 && !isStop(w));
+
+    function detectLang(text) {
+      const t = tokens(text.slice(0, 4000));
+      const es = ['el', 'la', 'los', 'las', 'de', 'que', 'y', 'en', 'un', 'una', 'es', 'por', 'con', 'para', 'del'];
+      const en = ['the', 'of', 'and', 'to', 'is', 'in', 'that', 'for', 'with', 'are', 'on', 'as', 'by'];
+      let a = 0, b = 0;
+      t.forEach(w => { if (es.includes(w)) a++; if (en.includes(w)) b++; });
+      return b > a ? 'en' : 'es';
+    }
+
+    function splitSentences(p) {
+      const flat = p.replace(/\s+/g, ' ').trim();
+      if (!flat) return [];
+      return flat.split(/(?<=[.!?…])\s+(?=[¿¡"“«(A-ZÁÉÍÓÚÑ0-9])/)
+        .flatMap(s => s.split(/;\s+/))
+        .map(s => s.trim()).filter(Boolean);
+    }
+
+    function parse(text) {
+      const lines = text.replace(/\r/g, '').split('\n').map(s => s.trim());
+      const nextNonEmpty = i => { for (let j = i + 1; j < lines.length; j++) if (lines[j]) return lines[j]; return null; };
+      const isList = l => /^([-*•·–]|\d+[.)])\s+/.test(l);
+      const isHeading = (l, i) => {
+        if (!l || isList(l)) return false;
+        if (/^#{1,6}\s+/.test(l)) return true;
+        const words = l.split(/\s+/).length;
+        if (/:$/.test(l) && words <= 8) return true;
+        return l.length <= 70 && words <= 8 && !/[.!?;,…]$/.test(l) && nextNonEmpty(i) != null;
+      };
+      const sections = [];
+      let cur = { title: null, sents: [] };
+      let para = [];
+      const flushPara = () => { if (para.length) { splitSentences(para.join(' ')).forEach(s => cur.sents.push({ text: s, list: false })); para = []; } };
+      lines.forEach((l, i) => {
+        if (!l) { flushPara(); return; }
+        if (isHeading(l, i)) {
+          flushPara();
+          if (cur.title || cur.sents.length) sections.push(cur);
+          cur = { title: l.replace(/^#{1,6}\s+/, '').replace(/:$/, '').trim(), sents: [] };
+          return;
+        }
+        if (isList(l)) { flushPara(); splitSentences(l.replace(/^([-*•·–]|\d+[.)])\s+/, '')).forEach(s => cur.sents.push({ text: s, list: true })); return; }
+        para.push(l);
+      });
+      flushPara();
+      if (cur.title || cur.sents.length) sections.push(cur);
+      return sections;
+    }
+
+    function clean(s) {
+      let t = s.replace(/\s*\([^)]*\)/g, '').replace(/\s*\[[^\]]*\]/g, '').trim();
+      let prev;
+      do { prev = t; t = t.replace(LEAD, ''); } while (t !== prev);
+      return t.replace(FILLER, '').replace(/\s+/g, ' ').replace(/[.;:,]+$/, '').trim();
+    }
+
+    function compress(s, maxWords) {
+      let t = clean(s);
+      const words = t.split(' ');
+      if (words.length > maxWords) {
+        const part = words.slice(0, maxWords).join(' ');
+        const ci = Math.max(part.lastIndexOf(','), part.lastIndexOf(';'), part.lastIndexOf(':'));
+        if (ci > part.length * 0.5) t = part.slice(0, ci);
+        else {
+          const ws = words.slice(0, maxWords);
+          while (ws.length > 3 && isStop(ws[ws.length - 1].replace(/[^\p{L}]/gu, ''))) ws.pop();
+          t = ws.join(' ').replace(/[,;:]$/, '') + '…';
+        }
+      }
+      return cap(t);
+    }
+
+    const RULES_ES = [
+      { re: /^(.{3,70}?)\s+(se define como|se denomina|se conoce como|se llama)\s+(.{3,})$/i, q: s => `¿Cómo se define ${s}?` },
+      { re: /^(.{3,70}?)\s+(consiste en|consisten en)\s+(.{3,})$/i, q: s => `¿En qué consiste ${s}?` },
+      { re: /^(.{3,70}?)\s+(significa|significan|se refiere a|se refieren a|representa|representan)\s+(.{3,})$/i, q: s => `¿Qué significa ${s}?` },
+      { re: /^(.{3,70}?)\s+(sirve para|sirven para|permite|permiten|se utiliza para|se utilizan para|se usa para|se usan para)\s+(.{3,})$/i, q: s => `¿Para qué sirve ${s}?` },
+      { re: /^(.{3,70}?)\s+(causa|causan|provoca|provocan|produce|producen|genera|generan|origina|originan|sintetiza|sintetizan|regula|regulan|realiza|realizan)\s+(.{3,})$/i, q: (s, v) => `¿Qué ${v.toLowerCase()} ${s}?` },
+      { re: /^(.{3,70}?)\s+(se compone de|se componen de|está formad[oa] por|están formad[oa]s por)\s+(.{3,})$/i, q: s => `¿Qué compone ${s}?` },
+      { re: /^(.{3,70}?)\s+(tiene|tienen|incluye|incluyen|contiene|contienen|posee|poseen)\s+(.{3,})$/i, q: (s, v) => `¿Qué ${v.toLowerCase()} ${s}?` },
+      { year: true },
+      { re: /^(.{3,70}?)\s+(es|son|era|eran|fue|fueron)\s+(.{3,})$/i, q: (s, v, proper) => (proper && /^(fue|era)$/i.test(v) ? `¿Quién ${v.toLowerCase()} ${s}?` : `¿Qué ${v.toLowerCase()} ${s}?`), noParticiple: true }
+    ];
+    const RULES_EN = [
+      { re: /^(.{3,70}?)\s+(is defined as|is known as|is called)\s+(.{3,})$/i, q: s => `How is ${s} defined?` },
+      { re: /^(.{3,70}?)\s+(means|refers to|represents)\s+(.{3,})$/i, q: s => `What does ${s} mean?` },
+      { re: /^(.{3,70}?)\s+(is used to|are used to|allows|allow|enables|enable)\s+(.{3,})$/i, q: s => `What is ${s} used for?` },
+      { re: /^(.{3,70}?)\s+(causes|cause|produces|produce|generates|generate)\s+(.{3,})$/i, q: (s, v) => `What does ${s} ${v.replace(/s$/, '')}?` },
+      { re: /^(.{3,70}?)\s+(has|have|includes|include|contains|contain)\s+(.{3,})$/i, q: s => `What does ${s} include?` },
+      { year: true },
+      { re: /^(.{3,70}?)\s+(is|are|was|were)\s+(.{3,})$/i, q: (s, v, proper) => (proper && /^(was)$/i.test(v) ? `Who was ${s}?` : `What ${v.toLowerCase()} ${s}?`), noParticiple: true }
+    ];
+
+    function makeQA(sentence, lang, ansWords, topWord) {
+      const s = clean(sentence);
+      const rules = lang === 'en' ? RULES_EN : RULES_ES;
+      for (const r of rules) {
+        if (r.year) {
+          const y = s.match(/\b(1[0-9]{3}|20[0-9]{2})\b/);
+          if (y) return { q: lang === 'en' ? `What happened in ${y[1]}?` : `¿Qué ocurrió en ${y[1]}?`, a: compress(s, ansWords) };
+          continue;
+        }
+        const m = s.match(r.re);
+        if (!m) continue;
+        let subj = m[1].trim();
+        const verb = m[2];
+        const rest = m[3].trim();
+        if (subj.includes(',') || subj.split(/\s+/).length > 9 || /^(y|o|pero|si|cuando|and|but)\b/i.test(subj) || /(^|\s)(que|which|that|who)(\s|$)/i.test(subj)) continue;
+        if (r.noParticiple && /^\p{L}+(ado|ada|ados|adas|ido|ida|idos|idas|ed)\b/iu.test(rest)) continue;
+        const proper = /^\p{Lu}/u.test(subj) && !/^(El|La|Los|Las|Un|Una|Unos|Unas|Este|Esta|Estos|Estas|Ese|Esa|Su|Sus|Lo|The|A|An|This|These|Those|Its|Their)\b/.test(subj);
+        if (!proper) subj = subj.charAt(0).toLowerCase() + subj.slice(1);
+        return { q: r.q(subj, verb, proper), a: compress(rest, ansWords) };
+      }
+      // Cloze: oculta el primer término relevante
+      const short = compress(s, ansWords + 4).replace(/…$/, '');
+      const words = (short.match(/[\p{L}\p{N}]+/gu) || []).filter(w => w.length > 4 && !isStop(w));
+      const stem = w => deaccent(w.toLowerCase()).slice(0, 5);
+      const cand = words.find(w => !topWord || stem(w) !== topWord.slice(0, 5)) || words[0];
+      if (cand) {
+        const re = new RegExp(`(^|[^\\p{L}])${cand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}])`, 'u');
+        return { q: `${lang === 'en' ? 'Fill in' : 'Completa'}: ${short.replace(re, '$1____')}`, a: cap(cand) };
+      }
+      return null;
+    }
+
+    function summarize(text, level, L) {
+      const lang = detectLang(text);
+      const sections = parse(text);
+      const all = [];
+      sections.forEach((sec, si) => sec.sents.forEach((s, i) => all.push({ ...s, si, first: i === 0, idx: all.length })));
+      const usable = all.filter(s => content(s.text).length >= (s.list ? 1 : 3));
+      if (!usable.length) return { items: [], lang };
+
+      const freq = new Map();
+      usable.forEach(s => content(s.text).forEach(w => { const k = deaccent(w); freq.set(k, (freq.get(k) || 0) + 1); }));
+      const maxF = Math.max(1, ...freq.values());
+      const DEF = lang === 'en' ? /\b(is|are|means|refers to|is defined|is called|consists)\b/i : /\b(es|son|se define|consiste|significa|se denomina|se conoce como|se llama)\b/i;
+      usable.forEach(s => {
+        const cw = content(s.text);
+        const base = cw.reduce((a, w) => a + (freq.get(deaccent(w)) || 0) / maxF, 0) / Math.pow(cw.length || 1, 0.6);
+        s.score = base + (s.first ? 0.25 : 0) + (/\d/.test(s.text) ? 0.15 : 0) + (DEF.test(s.text) ? 0.3 : 0) + (s.list ? 0.12 : 0);
+      });
+
+      const n = usable.length;
+      const target = level === 'points' ? clamp(Math.round(n * 0.45), 3, 30)
+                   : level === 'qa' ? clamp(Math.round(n * 0.4), 3, 20)
+                   : clamp(Math.round(n * 0.55), 3, 36);
+      const chosen = new Set();
+      const bySection = new Map();
+      usable.forEach(s => { if (!bySection.has(s.si) || bySection.get(s.si).score < s.score) bySection.set(s.si, s); });
+      [...bySection.values()].sort((a, b) => b.score - a.score).slice(0, target).forEach(s => chosen.add(s.idx));
+      [...usable].sort((a, b) => b.score - a.score).forEach(s => { if (chosen.size < Math.min(target, n)) chosen.add(s.idx); });
+      const picked = usable.filter(s => chosen.has(s.idx));
+
+      const cpl = L.cpl;
+      const items = [];
+      if (level === 'points') {
+        const mw = clamp(Math.round((cpl * 2) / 6.2), 6, 14);
+        picked.forEach(s => items.push({ type: 'point', text: compress(s.text, mw) }));
+      } else if (level === 'bullets') {
+        const mw = clamp(Math.round((cpl * 3.2) / 6.2), 10, 24);
+        let lastSec = -1;
+        picked.forEach(s => {
+          const title = sections[s.si].title;
+          if (s.si !== lastSec && title) items.push({ type: 'heading', text: compress(title, 6).replace(/…$/, '') });
+          lastSec = s.si;
+          items.push({ type: 'bullet', text: compress(s.text, mw) });
+        });
+      } else {
+        const aw = clamp(Math.round((cpl * 3) / 6.2), 8, 20);
+        const topWord = [...freq.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+        picked.forEach(s => { const qa = makeQA(s.text, lang, aw, topWord); if (qa) items.push({ type: 'qa', q: qa.q, a: qa.a }); });
+      }
+      return { items: items.filter(it => (it.text || it.q || '').length > 1), lang };
+    }
+
+    return { summarize, detectLang };
+  })();
+
+  /* ======================================================================
+     IA real (OpenAI / Gemini)
+     ====================================================================== */
+  const AI = (() => {
+    function prompt(text, level, L) {
+      const pChars = clamp(L.cpl * 2, 40, 90), bChars = clamp(L.cpl * 3, 60, 150);
+      const words = (text.match(/\S+/g) || []).length;
+      const maxItems = clamp(Math.round(words / (level === 'qa' ? 28 : 18)), 4, 40);
+      const spec = {
+        points: `PUNTOS CLAVE ULTRACORTOS: usa solo elementos {"type":"point","text":"..."} de máximo ${pChars} caracteres, estilo telegráfico, una idea por elemento.`,
+        bullets: `VIÑETAS ESTRUCTURADAS: agrupa por temas con elementos {"type":"heading","text":"..."} (títulos de 1 a 4 palabras) seguidos de elementos {"type":"bullet","text":"..."} de máximo ${bChars} caracteres.`,
+        qa: `PREGUNTAS Y RESPUESTAS CORTAS: usa solo elementos {"type":"qa","q":"...","a":"..."}; la pregunta con máximo ${pChars} caracteres y la respuesta con máximo ${bChars} caracteres, tipo flashcard.`
+      }[level];
+      const system = `Eres un experto en técnicas de estudio y microcopy para smartwatches. Conviertes apuntes en contenido para una pantalla de reloj de ${L.w}x${L.h} px que muestra ${L.lines} líneas de unos ${L.cpl} caracteres. Responde SOLO con JSON válido con la forma {"items":[...]}. Tipos permitidos: heading, point, bullet, qa. Escribe en el mismo idioma de los apuntes. No inventes datos que no estén en el texto. Sin markdown, sin emojis, sin numeración.`;
+      const user = `Formato: ${spec}\nGenera como máximo ${maxItems} elementos, priorizando definiciones, conceptos clave, fechas, cifras, fórmulas y relaciones causa-efecto.\n\nAPUNTES:\n"""\n${text.slice(0, 60000)}\n"""`;
+      return { system, user };
+    }
+
+    function parseJSON(raw) {
+      let s = String(raw || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '');
+      const a = s.indexOf('{'), b = s.lastIndexOf('}');
+      const a2 = s.indexOf('['), b2 = s.lastIndexOf(']');
+      if (a !== -1 && b > a && (a2 === -1 || a < a2)) s = s.slice(a, b + 1);
+      else if (a2 !== -1 && b2 > a2) s = s.slice(a2, b2 + 1);
+      return JSON.parse(s);
+    }
+
+    function normalize(data) {
+      const arr = Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : [];
+      const tidy = v => String(v ?? '').replace(/\s+/g, ' ').replace(/^([-*•·–]|\d+[.)])\s+/, '').replace(/\*\*/g, '').trim();
+      return arr.slice(0, 80).map(it => {
+        const type = String(it?.type || '').toLowerCase();
+        if (type === 'qa' || (it?.q && it?.a)) { const q = tidy(it.q || it.question), a = tidy(it.a || it.answer); return q && a ? { type: 'qa', q, a } : null; }
+        const text = tidy(it?.text || it?.content);
+        if (!text) return null;
+        return { type: ['heading', 'point', 'bullet'].includes(type) ? type : 'bullet', text };
+      }).filter(Boolean);
+    }
+
+    async function request(url, opts, ms = 60000) {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), ms);
+      try {
+        const res = await fetch(url, { ...opts, signal: ctrl.signal });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body?.error?.message || `HTTP ${res.status}`);
+        return body;
+      } catch (e) {
+        if (e.name === 'AbortError') throw new Error('Tiempo de espera agotado');
+        if (e instanceof TypeError) throw new Error('No se pudo conectar (red o CORS)');
+        throw e;
+      } finally { clearTimeout(t); }
+    }
+
+    const SAMPLE_ERRORS = {
+      not_granted: 'no se dio permiso para usar Claude en esta página',
+      sampling_disabled: 'Claude no está disponible para esta cuenta',
+      rate_limited: 'demasiadas solicitudes o límite de uso alcanzado; prueba en unos minutos',
+      session_expired: 'la sesión expiró; vuelve a iniciar sesión en Claude',
+      prompt_too_large: 'el texto es demasiado largo; divídelo en partes',
+      refused: 'Claude no pudo procesar este texto',
+      invalid_json: 'la respuesta no tuvo el formato esperado',
+      cancelled: 'cancelado'
+    };
+
+    async function summarizeWithClaude(text, level, L) {
+      const { system, user } = prompt(text, level, L);
+      try {
+        const data = await caps.sample.json(`${system}\n\n${user}`, { modelTier: state.api.model });
+        const items = normalize(data);
+        if (!items.length) throw { code: 'invalid_json' };
+        return items;
+      } catch (e) {
+        throw new Error(SAMPLE_ERRORS[e && e.code] || 'error temporal del servicio');
+      }
+    }
+
+    async function summarize(text, level, L) {
+      const provider = state.api.provider;
+      if (provider === 'claude') return summarizeWithClaude(text, level, L);
+      const model = activeModel(), key = state.keys[provider].trim();
+      const { system, user } = prompt(text, level, L);
+      let raw;
+      if (provider === 'openai') {
+        const body = { model, response_format: { type: 'json_object' }, messages: [{ role: 'system', content: system }, { role: 'user', content: user }] };
+        if (!/^(o\d|gpt-5)/i.test(model)) body.temperature = 0.3;
+        const data = await request('https://api.openai.com/v1/chat/completions', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` }, body: JSON.stringify(body)
+        });
+        raw = data?.choices?.[0]?.message?.content;
+      } else {
+        const data = await request(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+          body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: [{ text: user }] }], generationConfig: { temperature: 0.3, responseMimeType: 'application/json' } })
+        });
+        raw = (data?.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('');
+      }
+      if (!raw) throw new Error('Respuesta vacía del modelo');
+      const items = normalize(parseJSON(raw));
+      if (!items.length) throw new Error('El modelo no devolvió elementos válidos');
+      return items;
+    }
+
+    async function test() {
+      const provider = state.api.provider, model = activeModel(), key = state.keys[provider].trim();
+      if (provider === 'openai') await request(`https://api.openai.com/v1/models/${encodeURIComponent(model)}`, { headers: { Authorization: `Bearer ${key}` } }, 15000);
+      else await request(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}`, { headers: { 'x-goog-api-key': key } }, 15000);
+    }
+
+    return { summarize, test };
+  })();
+
+  /* ======================================================================
+     Exportación PNG
+     ====================================================================== */
+  function roundRect(x, X, Y, W, H, r) { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + W, Y, X + W, Y + H, r); x.arcTo(X + W, Y + H, X, Y + H, r); x.arcTo(X, Y + H, X, Y, r); x.arcTo(X, Y, X + W, Y, r); x.closePath(); }
+
+  function drawCardCanvas(page, L, o) {
+    const T = THEMES[o.theme];
+    const c = document.createElement('canvas');
+    c.width = L.w; c.height = L.h;
+    const x = c.getContext('2d');
+    const m = L.margin;
+    x.fillStyle = T.bg; x.fillRect(0, 0, L.w, L.h);
+    x.textBaseline = 'middle';
+    x.font = Measure.font(L.metaFont, 600); x.fillStyle = T.muted;
+    x.fillText(o.time, m, m + L.statusH / 2);
+    const bw = L.metaFont * 2, bh = L.metaFont, bx = L.w - m - bw, by = m + L.statusH / 2 - bh / 2;
+    x.strokeStyle = T.muted; x.lineWidth = 1; roundRect(x, bx + 0.5, by + 0.5, bw * 0.82, bh - 1, 2.5); x.stroke();
+    x.fillStyle = T.accent2; roundRect(x, bx + 2, by + 2, bw * 0.55, bh - 4, 1.3); x.fill();
+    let y = m + L.statusH;
+    const gap = blockGap(page, L);
+    page.blocks.forEach((b, bi) => {
+      if (bi) y += gap;
+      b.lines.forEach(l => {
+        const st = lineStyle(l.k, T, o.lang);
+        const cy = y + L.lineH / 2;
+        x.font = Measure.font(L.font, st.weight); x.fillStyle = st.color;
+        x.fillText(l.t, m + l.ind, cy);
+        if (l.s && st.marker) { x.font = Measure.font(L.font, 700); x.fillStyle = st.markColor; x.fillText(st.marker, m, cy); }
+        y += L.lineH;
+      });
+    });
+    const fy = L.h - m - 3;
+    x.fillStyle = T.track; roundRect(x, m, fy, L.contentW, 3, 1.5); x.fill();
+    x.fillStyle = T.accent; roundRect(x, m, fy, Math.max(3, L.contentW * (o.index + 1) / o.total), 3, 1.5); x.fill();
+    x.font = Measure.font(L.metaFont, 600); x.fillStyle = T.muted;
+    const ty = fy - 6 - L.metaFont / 2;
+    x.fillText(`Tarjeta ${o.index + 1} de ${o.total}`, m, ty);
+    x.textAlign = 'right'; x.fillStyle = T.accent; x.fillText((LEVELS[o.level] || LEVELS.bullets).short, L.w - m, ty);
+    return c;
+  }
+
+  async function renderPNG(i) {
+    const L = computeLayout();
+    const o = { theme: state.screenTheme, index: i, total: state.pages.length, lang: state.result.lang, level: state.result.level, time: timeNow() };
+    if (window.html2canvas) {
+      const host = $('#exportHost');
+      host.innerHTML = screenHTML(state.pages[i], L, o);
+      try {
+        // foreignObjectRendering usa el motor tipográfico del navegador: texto idéntico al simulador.
+        const canvas = await window.html2canvas(host.firstElementChild, {
+          width: L.w, height: L.h, scale: 1, backgroundColor: THEMES[o.theme].bg, logging: false, foreignObjectRendering: true,
+          onclone: doc => { const h = doc.getElementById('exportHost'); if (h) { h.style.left = '0px'; h.style.top = '0px'; } }
+        });
+        canvas.getContext('2d').getImageData(0, 0, 1, 1); // lanza si el canvas quedó "contaminado" (p. ej. Safari)
+        if (canvas.width === L.w && canvas.height === L.h) return canvas;
+      } catch (e) { console.warn('html2canvas no disponible en este navegador, usando render nativo', e); }
+      finally { host.innerHTML = ''; }
+    }
+    return drawCardCanvas(state.pages[i], L, o);
+  }
+
+  function showImages(list) {
+    const box = $('#imgModalList');
+    box.innerHTML = '';
+    list.forEach(({ canvas, name }) => {
+      const img = document.createElement('img');
+      img.src = canvas.toDataURL('image/png');
+      img.alt = name;
+      img.className = 'w-auto max-w-full rounded-xl ring-1 ring-white/10';
+      img.style.maxHeight = '56vh';
+      box.appendChild(img);
+    });
+    $('#imgModalTitle').textContent = list.length > 1 ? `${list.length} imágenes listas` : 'Imagen lista';
+    $('#imgModal').hidden = false;
+  }
+
+  // Devuelve 'saved' | 'declined' | 'shown'
+  async function saveCanvas(canvas, name) {
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+    if (!ENV.published) {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      return 'saved';
+    }
+    if (caps.downloads) {
+      try { await caps.downloads.save({ filename: name, data: blob }); return 'saved'; }
+      catch (e) {
+        const code = e && e.code;
+        if (code === 'declined') return 'declined';
+        if (code === 'rate_limited') throw new Error('ya hay una descarga pendiente; espera un momento');
+      }
+    }
+    return 'shown';
+  }
+  const slug = s => deaccent(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const pngName = i => `wristnotes-${slug(getDevice().short)}-${getDevice().w}x${getDevice().h}-tarjeta-${String(i + 1).padStart(2, '0')}.png`;
+
+  async function copyText(text) {
+    try { await navigator.clipboard.writeText(text); return true; }
+    catch {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      let ok = false; try { ok = document.execCommand('copy'); } catch { ok = false; }
+      ta.remove(); return ok;
+    }
+  }
+
+  /* ======================================================================
+     Toasts
+     ====================================================================== */
+  function toast(msg, type = 'info', ms = 3400) {
+    const map = { success: ['check', 'text-emerald-300', 'ring-emerald-400/25'], error: ['alert', 'text-rose-300', 'ring-rose-400/25'], warn: ['alert', 'text-amber-300', 'ring-amber-400/25'], info: ['info', 'text-indigo-300', 'ring-indigo-400/25'] }[type] || [];
+    const el = document.createElement('div');
+    el.className = `toast pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl bg-ink-850/95 px-4 py-3 text-sm text-zinc-100 shadow-2xl shadow-black/60 ring-1 backdrop-blur-xl ${map[2]}`;
+    el.innerHTML = `<span class="mt-0.5 ${map[1]}">${icon(map[0], 'w-4 h-4')}</span><span class="flex-1 leading-relaxed">${esc(msg)}</span>`;
+    $('#toasts').appendChild(el);
+    setTimeout(() => { el.classList.add('toast-out'); setTimeout(() => el.remove(), 300); }, ms);
+  }
+
+  /* ======================================================================
+     Navegación
+     ====================================================================== */
+  const VIEWS = { 1: '#view-device', 2: '#view-editor', 3: '#view-sim' };
+  const HASH = { 1: 'dispositivo', 2: 'procesador', 3: 'simulador' };
+  const hashToView = () => +(Object.keys(HASH).find(k => HASH[k] === location.hash.slice(1)) || 1);
+
+  function go(n, { push = true } = {}) {
+    n = clamp(+n || 1, 1, 3);
+    const next = $(VIEWS[n]);
+    const cur = $('.view.active');
+    if (push && location.hash.slice(1) !== HASH[n]) { location.hash = HASH[n]; return; } // hashchange vuelve a llamar a go()
+    const show = () => {
+      next.classList.add('active');
+      state.view = n;
+      updateStepper();
+      onEnter(n);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    if (cur === next) { onEnter(n); return; }
+    if (cur) { cur.classList.add('leaving'); setTimeout(() => { cur.classList.remove('active', 'leaving'); show(); }, 170); }
+    else show();
+  }
+
+  function updateStepper() {
+    $$('#stepper .step').forEach(b => {
+      const s = +b.dataset.step;
+      const num = $('.step-num', b), lab = $('.step-label', b);
+      const active = s === state.view, done = s < state.view;
+      b.className = `step group flex items-center gap-2 rounded-full px-2 py-1.5 sm:px-3 transition-all duration-300 ${active ? 'bg-indigo-500/10 ring-1 ring-indigo-400/30' : 'hover:bg-white/5'}`;
+      num.className = `step-num grid h-6 w-6 place-items-center rounded-full text-[11px] font-bold transition-all duration-300 ${active ? 'bg-gradient-to-br from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/40' : done ? 'bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-400/30' : 'bg-white/5 text-zinc-500 ring-1 ring-white/10'}`;
+      num.innerHTML = done ? icon('check', 'w-3.5 h-3.5') : String(s);
+      if (lab) lab.className = `step-label hidden md:inline text-xs font-semibold ${active ? 'text-white' : done ? 'text-zinc-300' : 'text-zinc-500'}`;
+      b.setAttribute('aria-current', active ? 'step' : 'false');
+    });
+  }
+
+  function onEnter(n) {
+    if (n === 1) renderDeviceView();
+    if (n === 2) renderEditorView();
+    if (n === 3) renderSimView();
+  }
+
+  /* ======================================================================
+     Motor (indicador global)
+     ====================================================================== */
+  function renderEngine() {
+    const ai = aiReady();
+    const label = `${PROVIDERS[state.api.provider].label} · ${modelName()}`;
+    $('#engineDot').className = `h-2 w-2 rounded-full ${ai ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,.8)]' : 'bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,.8)]'}`;
+    $('#engineText').textContent = ai ? `IA · ${label}` : 'Modo simulado';
+    const ed = $('#edEngine');
+    if (ed) ed.innerHTML = `<span class="h-2 w-2 rounded-full ${ai ? 'bg-emerald-400' : 'bg-amber-400'}"></span>${ai ? esc(label) : 'Generador simulado local'}`;
+  }
+
+  /* ======================================================================
+     MÓDULO 1
+     ====================================================================== */
+  function deviceCardHTML(d, active) {
+    const dims = d.id === 'custom' ? state.custom : d;
+    const ph = 62, pw = Math.max(26, Math.round(ph * (dims.w / dims.h)));
+    return `<button type="button" data-device="${d.id}" aria-pressed="${active}" class="group relative rounded-2xl border p-4 text-left transition-all duration-300 ${active ? 'border-indigo-400/60 bg-indigo-500/[0.08] shadow-glow' : 'border-white/[0.07] bg-white/[0.02] hover:-translate-y-0.5 hover:border-white/15 hover:bg-white/[0.04]'}">
+      <div class="flex items-center gap-4">
+        <div class="grid h-20 w-16 shrink-0 place-items-center">
+          <div class="rounded-[11px] bg-gradient-to-b from-zinc-600 to-zinc-900 p-[3px] shadow-lg shadow-black/50 transition-transform duration-300 group-hover:scale-105" style="width:${pw + 6}px;height:${ph + 6}px">
+            <div class="flex h-full w-full flex-col justify-center gap-[3px] rounded-[8px] bg-black px-1.5">
+              <span class="h-[3px] w-3/4 rounded ${active ? 'bg-indigo-300' : 'bg-indigo-300/60'}"></span>
+              <span class="h-[3px] rounded bg-white/45"></span><span class="h-[3px] w-5/6 rounded bg-white/35"></span><span class="h-[3px] w-2/3 rounded bg-white/25"></span>
+            </div>
+          </div>
+        </div>
+        <div class="min-w-0 flex-1">
+          <span class="chip ${active ? 'bg-indigo-500/20 text-indigo-200' : ''}">${d.tag}</span>
+          <h3 class="mt-2 text-sm font-semibold leading-snug text-white">${esc(d.name)}</h3>
+          <p class="mt-1 text-xs leading-relaxed text-zinc-400">${d.note}</p>
+          <p class="mt-2 font-mono text-[11px] font-semibold text-indigo-300">${dims.w} × ${dims.h} px</p>
+        </div>
+      </div>
+      <span class="absolute right-3 top-3 grid h-5 w-5 place-items-center rounded-full transition-all duration-300 ${active ? 'scale-100 bg-indigo-500 text-white opacity-100' : 'scale-75 opacity-0'}">${icon('check', 'w-3 h-3')}</span>
+    </button>`;
+  }
+
+  function renderDeviceGrid() {
+    $('#deviceGrid').innerHTML = Object.values(DEVICES).map(d => deviceCardHTML(d, d.id === state.deviceId)).join('');
+    $('#deviceSelect').value = state.deviceId;
+    $('#customPanel').classList.toggle('hidden', state.deviceId !== 'custom');
+    $('#customW').value = state.custom.w;
+    $('#customH').value = state.custom.h;
+  }
+
+  function paintRange(el) { el.style.setProperty('--p', ((el.value - el.min) / (el.max - el.min)) * 100 + '%'); }
+
+  function renderVisual() {
+    const v = state.visual;
+    $('#fontRange').value = v.font; $('#lhRange').value = v.lh; $('#marginRange').value = v.margin;
+    $$('input[type=range]').forEach(paintRange);
+    $('#fontVal').textContent = `${v.font} px`;
+    $('#lhVal').textContent = Number(v.lh).toFixed(2);
+    $('#marginVal').textContent = `${v.margin} px`;
+    const L = computeLayout({ forceAuto: true });
+    $('#capLines').textContent = L.maxLines;
+    $('#capCpl').textContent = `≈ ${L.cpl}`;
+    $('#capArea').textContent = `${Math.round(L.contentW)}×${Math.round(L.contentH)}`;
+    $('#capChars').textContent = `≈ ${L.cpl * L.maxLines}`;
+  }
+
+  function renderPreview() {
+    const stage = $('#previewStage');
+    if (!stage || !stage.offsetParent) return;
+    const L = computeLayout({ forceAuto: true });
+    const page = paginate(SAMPLE_ITEMS, L)[0];
+    mountWatch(stage, L, screenHTML(page, L, { theme: state.screenTheme, index: 0, total: 1, level: 'bullets' }), { maxH: 380 });
+    const d = getDevice();
+    const g = (a, b) => { const r = (x, y) => (y ? r(y, x % y) : x); return r(a, b); };
+    const gc = g(d.w, d.h);
+    const specs = [['Resolución', `${d.w}×${d.h}`], ['Diagonal', d.diag], ['Densidad', d.ppi ? `${d.ppi} PPI` : '—'], ['Relación', `${d.w / gc}:${d.h / gc}`], ['Panel', d.panel], ['Líneas máx.', L.maxLines]];
+    $('#specList').innerHTML = specs.map(([k, v]) => `<div class="rounded-lg bg-white/[0.03] px-3 py-2"><dt class="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">${k}</dt><dd class="mt-0.5 font-mono text-xs font-semibold text-zinc-100">${esc(v)}</dd></div>`).join('');
+  }
+
+  function renderModels() {
+    const isClaude = state.api.provider === 'claude';
+    const p = PROVIDERS[state.api.provider];
+    $$('#providerSelect option').forEach(o => {
+      const usable = o.value === 'claude' ? ENV.published : !ENV.published;
+      o.disabled = !usable;
+      const base = { claude: 'Claude integrado (sin llave)', openai: 'OpenAI', gemini: 'Google Gemini' }[o.value];
+      o.textContent = usable ? base : `${base} — ${o.value === 'claude' ? 'solo en la versión publicada' : 'solo en el archivo local'}`;
+    });
+    $('#providerSelect').value = state.api.provider;
+    $('#modelSelect').innerHTML = p.models.map(m => `<option value="${m}">${esc(isClaude ? p.names[m] : m)}</option>`).join('') + (isClaude ? '' : '<option value="__custom">Otro modelo…</option>');
+    if (!(state.api.model === '__custom' && !isClaude) && !p.models.includes(state.api.model)) state.api.model = p.models[0];
+    $('#modelSelect').value = state.api.model;
+    $$('.key-area').forEach(el => { el.hidden = isClaude; });
+    $('#customModelWrap').classList.toggle('hidden', state.api.model !== '__custom');
+    $('#customModel').value = state.api.customModel || '';
+    $('#apiKey').placeholder = p.hint;
+    $('#apiKey').value = state.keys[state.api.provider] || '';
+    $('#rememberKey').checked = !!state.api.remember;
+  }
+
+  function renderApiStatus() {
+    const key = (state.keys[state.api.provider] || '').trim();
+    const el = $('#apiStatus');
+    const badge = $('#apiBadge');
+    const ok = 'mt-4 flex items-start gap-2.5 rounded-xl border border-emerald-400/20 bg-emerald-500/[0.06] px-3.5 py-3 text-xs leading-relaxed text-emerald-100';
+    const warn = 'mt-4 flex items-start gap-2.5 rounded-xl border border-amber-400/20 bg-amber-500/[0.06] px-3.5 py-3 text-xs leading-relaxed text-amber-100';
+    if (state.api.provider === 'claude') {
+      if (caps.sample) {
+        el.className = ok;
+        el.innerHTML = `${icon('check', 'mt-0.5 w-4 h-4 shrink-0 text-emerald-300')}<span>IA real activa con <b>Claude integrado</b>: usa tu cuenta de Claude, sin API Key. La primera vez te pedirá permiso para usarlo en esta página.</span>`;
+        badge.textContent = 'IA real'; badge.className = 'chip bg-emerald-500/15 text-emerald-200';
+      } else {
+        el.className = warn;
+        el.innerHTML = `${icon('info', 'mt-0.5 w-4 h-4 shrink-0 text-amber-300')}<span>Comprobando si Claude integrado está disponible… Si no lo está, se usará el <b>generador simulado local</b>, que funciona sin conexión.</span>`;
+        badge.textContent = 'Simulado'; badge.className = 'chip bg-amber-500/15 text-amber-200';
+      }
+      renderEngine();
+      return;
+    }
+    if (key && activeModel()) {
+      el.className = 'mt-4 flex items-start gap-2.5 rounded-xl border border-emerald-400/20 bg-emerald-500/[0.06] px-3.5 py-3 text-xs leading-relaxed text-emerald-100';
+      el.innerHTML = `${icon('check', 'mt-0.5 w-4 h-4 shrink-0 text-emerald-300')}<span>IA real activa con <b>${esc(PROVIDERS[state.api.provider].label)} · ${esc(activeModel())}</b>. Llave terminada en <span class="font-mono">…${esc(key.slice(-4))}</span>${state.api.remember ? '' : ' (solo esta pestaña)'}.</span>`;
+      badge.textContent = 'IA real'; badge.className = 'chip bg-emerald-500/15 text-emerald-200';
+    } else {
+      el.className = 'mt-4 flex items-start gap-2.5 rounded-xl border border-amber-400/20 bg-amber-500/[0.06] px-3.5 py-3 text-xs leading-relaxed text-amber-100';
+      el.innerHTML = `${icon('info', 'mt-0.5 w-4 h-4 shrink-0 text-amber-300')}<span>Sin llave guardada para ${esc(PROVIDERS[state.api.provider].label)}${key ? ' o falta el identificador del modelo' : ''}: se usará el <b>generador simulado local</b>, que funciona sin conexión.</span>`;
+      badge.textContent = 'Simulado'; badge.className = 'chip bg-amber-500/15 text-amber-200';
+    }
+    renderEngine();
+  }
+
+  function persistKeys() {
+    if (state.api.remember) { Store.set('apiKeys', state.keys, 'local'); Store.del('apiKeys', 'session'); }
+    else { Store.set('apiKeys', state.keys, 'session'); Store.del('apiKeys', 'local'); }
+  }
+
+  function renderDeviceView() {
+    renderDeviceGrid();
+    renderVisual();
+    renderModels();
+    renderApiStatus();
+    requestAnimationFrame(renderPreview);
+  }
+
+  function setDevice(id) {
+    if (!DEVICES[id]) return;
+    state.deviceId = id;
+    Store.set('device', id);
+    renderDeviceGrid(); renderVisual(); renderPreview();
+  }
+
+  function bindDeviceView() {
+    $('#deviceSelect').innerHTML = Object.values(DEVICES).map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('');
+    $('#deviceSelect').addEventListener('change', e => setDevice(e.target.value));
+    $('#deviceGrid').addEventListener('click', e => { const b = e.target.closest('[data-device]'); if (b) setDevice(b.dataset.device); });
+
+    const onCustom = commit => {
+      const w = parseInt($('#customW').value, 10), h = parseInt($('#customH').value, 10);
+      if (!Number.isFinite(w) || !Number.isFinite(h)) return;
+      if (!commit && (w < 120 || h < 120 || w > 1000 || h > 1000)) return;
+      state.custom = { w: clamp(w, 120, 1000), h: clamp(h, 120, 1000) };
+      Store.set('custom', state.custom);
+      if (commit) { $('#customW').value = state.custom.w; $('#customH').value = state.custom.h; }
+      $('#deviceGrid').innerHTML = Object.values(DEVICES).map(d => deviceCardHTML(d, d.id === state.deviceId)).join('');
+      renderVisual(); renderPreview();
+    };
+    ['#customW', '#customH'].forEach(s => { $(s).addEventListener('input', () => onCustom(false)); $(s).addEventListener('change', () => onCustom(true)); });
+
+    const saveVisual = debounce(() => Store.set('visual', state.visual), 200);
+    const bindRange = (sel, key, parse) => $(sel).addEventListener('input', e => { state.visual[key] = parse(e.target.value); renderVisual(); renderPreview(); saveVisual(); });
+    bindRange('#fontRange', 'font', v => parseInt(v, 10));
+    bindRange('#lhRange', 'lh', v => Math.round(parseFloat(v) * 100) / 100);
+    bindRange('#marginRange', 'margin', v => parseInt(v, 10));
+
+    const saveApi = () => Store.set('api', state.api);
+    $('#providerSelect').addEventListener('change', e => { state.api.provider = e.target.value; state.api.model = PROVIDERS[state.api.provider].models[0]; saveApi(); renderModels(); renderApiStatus(); });
+    $('#modelSelect').addEventListener('change', e => { state.api.model = e.target.value; saveApi(); renderModels(); renderApiStatus(); if (e.target.value === '__custom') $('#customModel').focus(); });
+    $('#customModel').addEventListener('input', debounce(e => { state.api.customModel = e.target.value.trim(); saveApi(); renderApiStatus(); }, 300));
+    $('#rememberKey').addEventListener('change', e => { state.api.remember = e.target.checked; saveApi(); persistKeys(); renderApiStatus(); });
+
+    $('#btnToggleKey').addEventListener('click', () => {
+      const inp = $('#apiKey');
+      const show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      $('#btnToggleKey').innerHTML = icon(show ? 'eyeOff' : 'eye', 'w-4 h-4');
+    });
+    $('#btnSaveKey').addEventListener('click', () => {
+      const v = $('#apiKey').value.trim();
+      if (!v) { toast('Escribe una API Key antes de guardar.', 'warn'); $('#apiKey').focus(); return; }
+      if (/\s/.test(v)) { toast('La llave no debe contener espacios.', 'error'); return; }
+      state.keys[state.api.provider] = v;
+      persistKeys(); renderApiStatus();
+      toast(`Llave de ${PROVIDERS[state.api.provider].label} guardada.`, 'success');
+    });
+    $('#btnDeleteKey').addEventListener('click', () => {
+      state.keys[state.api.provider] = '';
+      persistKeys();
+      $('#apiKey').value = '';
+      renderApiStatus();
+      toast('Llave eliminada. Se usará el generador simulado.', 'info');
+    });
+    $('#btnTestKey').addEventListener('click', async () => {
+      const v = $('#apiKey').value.trim();
+      if (!v) { toast('Introduce una llave para probar la conexión.', 'warn'); return; }
+      if (!activeModel()) { toast('Indica el identificador del modelo.', 'warn'); return; }
+      const prev = state.keys[state.api.provider];
+      state.keys[state.api.provider] = v;
+      const btn = $('#btnTestKey');
+      btn.disabled = true; btn.innerHTML = '<span class="spinner" style="width:14px;height:14px"></span>Probando…';
+      try { await AI.test(); toast(`Conexión correcta con ${activeModel()}.`, 'success'); }
+      catch (e) { toast(`Fallo de conexión: ${e.message}`, 'error', 5500); state.keys[state.api.provider] = prev; }
+      finally { btn.disabled = false; btn.innerHTML = `${icon('activity', 'w-4 h-4')}Probar conexión`; renderApiStatus(); }
+    });
+    $('#btnToEditor').addEventListener('click', () => go(2));
+  }
+
+  /* ======================================================================
+     MÓDULO 2
+     ====================================================================== */
+  function renderLevels() {
+    $('#levelOptions').innerHTML = Object.entries(LEVELS).map(([k, l]) => {
+      const a = state.draft.level === k;
+      return `<button type="button" role="radio" aria-checked="${a}" data-level="${k}" class="flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-all duration-300 ${a ? 'border-indigo-400/50 bg-indigo-500/[0.08] shadow-glow' : 'border-white/[0.07] bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04]'}">
+        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg ${a ? 'bg-indigo-500 text-white' : 'bg-white/5 text-zinc-400'} transition-all duration-300">${icon(l.icon, 'w-4 h-4')}</span>
+        <span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-white">${l.label}</span><span class="block text-xs text-zinc-400">${l.desc}</span></span>
+        <span class="h-4 w-4 shrink-0 rounded-full border-2 ${a ? 'border-indigo-400 bg-indigo-400 shadow-[inset_0_0_0_3px_#0b0b14]' : 'border-white/20'}"></span>
+      </button>`;
+    }).join('');
+  }
+
+  function renderLines() {
+    const L = computeLayout({ forceAuto: true });
+    const top = Math.max(16, L.maxLines);
+    let html = `<option value="auto">Automático (máx. ${L.maxLines} líneas)</option>`;
+    for (let i = 2; i <= top; i++) html += `<option value="${i}" ${i > L.maxLines ? 'disabled' : ''}>${i} líneas${i > L.maxLines ? ' · excede la pantalla' : ''}</option>`;
+    const sel = $('#linesSelect');
+    sel.innerHTML = html;
+    const req = state.draft.lines;
+    const over = req !== 'auto' && +req > L.maxLines;
+    sel.value = over ? 'auto' : String(req);
+    $('#linesHint').innerHTML = over
+      ? `<span class="text-amber-300">Tu selección anterior (${req}) excede la capacidad de este reloj; se usa el modo automático.</span>`
+      : `Con fuente de ${state.visual.font}px e interlineado ${Number(state.visual.lh).toFixed(2)}, caben hasta <b class="text-zinc-300">${L.maxLines} líneas</b> de ≈${L.cpl} caracteres en ${L.w}×${L.h}px.`;
+    if (over) { state.draft.lines = 'auto'; saveDraft(); }
+  }
+
+  function updateCounters() {
+    const t = $('#sourceText').value;
+    const words = (t.match(/\S+/g) || []).length;
+    const sents = (t.match(/[^.!?…\n]+[.!?…]+/g) || []).length;
+    $('#cntChars').textContent = t.length.toLocaleString('es');
+    $('#cntWords').textContent = words.toLocaleString('es');
+    $('#cntSent').textContent = sents.toLocaleString('es');
+    $('#cntRead').textContent = words ? Math.max(1, Math.round(words / 200)) : 0;
+  }
+
+  const saveDraft = () => { Store.set('draft', state.draft); };
+  const saveDraftDebounced = debounce(() => {
+    const ok = Store.set('draft', state.draft);
+    const h = $('#saveHint');
+    if (ok) { h.style.opacity = '1'; clearTimeout(h._t); h._t = setTimeout(() => (h.style.opacity = '0'), 1400); }
+  }, 450);
+
+  function renderResults() {
+    const area = $('#resultsArea');
+    const L = computeLayout();
+    const tw = window.innerWidth < 640 ? 132 : 150;
+    if (state.busy) {
+      const h = Math.round(tw * L.h / L.w);
+      area.innerHTML = `<div class="mb-5 flex items-center gap-3"><span class="skeleton h-5 w-40 rounded-md"></span><span class="skeleton h-5 w-24 rounded-md"></span></div>
+        <div class="flex flex-wrap gap-4">${Array.from({ length: 6 }, (_, i) => `<div class="flex flex-col gap-2" style="animation-delay:${i * 80}ms"><div class="skeleton rounded-xl" style="width:${tw}px;height:${h}px"></div><span class="skeleton h-3 w-16 rounded"></span></div>`).join('')}</div>`;
+      return;
+    }
+    const items = state.result.items || [];
+    if (!items.length) {
+      area.innerHTML = `<div class="flex flex-col items-center gap-3 py-10 text-center">
+        <div class="grid h-14 w-14 place-items-center rounded-2xl bg-white/[0.04] text-zinc-500 ring-1 ring-inset ring-white/10">${icon('layers', 'w-6 h-6')}</div>
+        <p class="text-sm font-semibold text-zinc-300">Las tarjetas generadas aparecerán aquí</p>
+        <p class="max-w-sm text-xs text-zinc-500">Pega tu texto, elige el nivel de síntesis y pulsa «Generar tarjetas».</p></div>`;
+      return;
+    }
+    repaginate();
+    const total = state.pages.length;
+    const eng = state.result.engine || { type: 'sim', label: 'Motor local' };
+    area.innerHTML = `<div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 class="flex items-center gap-2 text-base font-semibold text-white">${icon('check', 'w-4 h-4 text-emerald-400')}${total} ${total === 1 ? 'tarjeta lista' : 'tarjetas listas'}</h2>
+          <p class="mt-1 text-xs text-zinc-400">${esc(getDevice().short)} · ${L.w}×${L.h}px · ${L.lines} líneas/pantalla · ${esc((LEVELS[state.result.level] || LEVELS.bullets).label)} · <span class="${eng.type === 'ai' ? 'text-emerald-300' : 'text-amber-300'}">${esc(eng.label)}</span></p>
+        </div>
+        <button id="btnOpenSim" class="btn btn-primary group">Abrir en el simulador ${icon('arrowRight', 'w-4 h-4 transition-transform duration-300 group-hover:translate-x-1')}</button>
+      </div>
+      <div class="flex flex-wrap gap-4">${state.pages.map((p, i) => `<button type="button" data-open="${i}" class="group flex flex-col items-start gap-2 text-left">
+          <div class="transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-glow rounded-xl">${thumbHTML(p, L, i, total, tw)}</div>
+          <span class="text-[11px] font-medium text-zinc-500 group-hover:text-indigo-300">Tarjeta ${i + 1}</span></button>`).join('')}</div>`;
+    $('#btnOpenSim').addEventListener('click', () => go(3));
+  }
+
+  function renderEditorView() {
+    const d = getDevice();
+    $('#edDevice').textContent = `${d.short} · ${d.w}×${d.h}px`;
+    if ($('#sourceText').value !== state.draft.text) $('#sourceText').value = state.draft.text;
+    updateCounters();
+    renderLevels();
+    renderLines();
+    renderEngine();
+    renderResults();
+  }
+
+  function setBusy(b) {
+    state.busy = b;
+    const btn = $('#btnGenerate');
+    btn.disabled = b;
+    $('#genIcon').innerHTML = b ? '<span class="spinner"></span>' : icon('sparkles', 'w-4 h-4');
+    $('#genLabel').textContent = b ? 'Procesando…' : 'Generar tarjetas';
+    if (!b) $('#genStatus').textContent = '';
+    renderResults();
+  }
+
+  async function generate() {
+    if (state.busy) return;
+    const text = $('#sourceText').value.trim();
+    state.draft.text = $('#sourceText').value; saveDraft();
+    if (text.length < 40 || (text.match(/\S+/g) || []).length < 8) { toast('Pega al menos un párrafo de apuntes (8 palabras o más).', 'warn'); $('#sourceText').focus(); return; }
+    const status = msg => { $('#genStatus').textContent = msg; };
+    setBusy(true);
+    const L = computeLayout();
+    const level = state.draft.level;
+    let items = null, engine = null, lang = Summarizer.detectLang(text);
+    try {
+      if (aiReady()) {
+        const label = `${PROVIDERS[state.api.provider].label} · ${modelName()}`;
+        status(state.api.provider === 'claude' ? 'Claude está leyendo tus apuntes… (puede tardar unos segundos)' : `Enviando a ${label}…`);
+        try {
+          items = await AI.summarize(text, level, L);
+          engine = { type: 'ai', label };
+        } catch (e) {
+          console.error(e);
+          toast(`La IA no respondió correctamente (${e.message}). Se usó el generador simulado.`, 'error', 6500);
+        }
+      }
+      if (!items) {
+        status('Analizando estructura del texto…'); await sleep(380);
+        status('Puntuando ideas clave…'); await sleep(380);
+        const r = Summarizer.summarize(text, level, L);
+        items = r.items; lang = r.lang;
+        engine = { type: 'sim', label: 'Generador simulado local' };
+      }
+      status(`Paginando para ${L.w}×${L.h}px…`); await sleep(220);
+      if (!items.length) throw new Error('No se pudo extraer contenido útil del texto.');
+      state.result = { items, engine, level, lang, createdAt: Date.now() };
+      state.index = 0;
+      Store.set('result', state.result); Store.set('index', 0);
+      repaginate();
+      toast(`${state.pages.length} ${state.pages.length === 1 ? 'tarjeta generada' : 'tarjetas generadas'} para ${getDevice().short}.`, 'success');
+    } catch (e) {
+      toast(e.message, 'error');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function bindEditorView() {
+    const ta = $('#sourceText');
+    ta.addEventListener('input', () => { state.draft.text = ta.value; updateCounters(); saveDraftDebounced(); });
+    $('#levelOptions').addEventListener('click', e => {
+      const b = e.target.closest('[data-level]'); if (!b) return;
+      state.draft.level = b.dataset.level; saveDraft(); renderLevels();
+    });
+    $('#linesSelect').addEventListener('change', e => {
+      state.draft.lines = e.target.value; saveDraft(); renderLines();
+      if (state.result.items.length) renderResults();
+    });
+    // Confirmación dentro de la página: el primer toque arma el botón y el segundo ejecuta.
+    const confirmTap = (btn, msg, action) => {
+      if (btn.dataset.armed === '1') { clearTimeout(btn._t); btn.dataset.armed = ''; btn.innerHTML = btn._html; action(); return; }
+      btn._html = btn.innerHTML; btn.dataset.armed = '1';
+      btn.innerHTML = `${icon('alert', 'w-3.5 h-3.5 text-amber-300')}${msg}`;
+      btn._t = setTimeout(() => { btn.dataset.armed = ''; btn.innerHTML = btn._html; }, 3000);
+    };
+    $('#btnSample').addEventListener('click', e => {
+      const load = () => { ta.value = SAMPLE_TEXT; state.draft.text = SAMPLE_TEXT; updateCounters(); saveDraft(); toast('Texto de ejemplo cargado.', 'info'); };
+      if (ta.value.trim() && ta.value !== SAMPLE_TEXT) confirmTap(e.currentTarget, '¿Reemplazar? Toca otra vez', load);
+      else load();
+    });
+    $('#btnClear').addEventListener('click', e => {
+      if (!ta.value) return;
+      confirmTap(e.currentTarget, '¿Borrar todo? Toca otra vez', () => { ta.value = ''; state.draft.text = ''; updateCounters(); saveDraft(); ta.focus(); });
+    });
+    $('#btnPaste').addEventListener('click', async () => {
+      try {
+        const t = await navigator.clipboard.readText();
+        if (!t) { toast('El portapapeles está vacío.', 'warn'); return; }
+        const s = ta.selectionStart, e = ta.selectionEnd;
+        ta.value = ta.value.slice(0, s) + t + ta.value.slice(e);
+        state.draft.text = ta.value; updateCounters(); saveDraft();
+        toast('Texto pegado.', 'success');
+      } catch { toast('El navegador bloqueó el acceso al portapapeles. Usa Ctrl+V / ⌘V.', 'warn'); ta.focus(); }
+    });
+    $('#btnGenerate').addEventListener('click', generate);
+    ta.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); generate(); } });
+    $('#resultsArea').addEventListener('click', e => {
+      const b = e.target.closest('[data-open]'); if (!b) return;
+      state.index = +b.dataset.open; Store.set('index', state.index); go(3);
+    });
+  }
+
+  /* ======================================================================
+     MÓDULO 3
+     ====================================================================== */
+  function simOpts(anim = '') {
+    return { theme: state.screenTheme, index: state.index, total: state.pages.length, lang: state.result.lang, level: state.result.level, anim };
+  }
+
+  function renderThemeToggle() {
+    const on = 'bg-white/10 text-white shadow', off = 'text-zinc-400 hover:text-zinc-200';
+    $('#themeDark').className = `flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all duration-300 ${state.screenTheme === 'dark' ? on : off}`;
+    $('#themeLight').className = `flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all duration-300 ${state.screenTheme === 'light' ? on : off}`;
+  }
+
+  function mountSim() {
+    const stage = $('#watchStage');
+    if (!state.pages.length || !stage.offsetParent) return;
+    const L = computeLayout();
+    const maxH = clamp(window.innerHeight - 300, 360, 680);
+    mountWatch(stage, L, screenHTML(state.pages[state.index], L, simOpts()), { maxH });
+  }
+
+  function updateSimMeta() {
+    const total = state.pages.length, i = state.index;
+    $('#pagerLabel').textContent = `Tarjeta ${i + 1} de ${total}`;
+    $('#pagerBar').style.width = `${((i + 1) / total) * 100}%`;
+    $('#btnPrev').disabled = i === 0;
+    $('#btnNext').disabled = i >= total - 1;
+    const page = state.pages[i];
+    $('#cardText').textContent = pageToText(page, state.result.lang);
+    $('#cardMeta').textContent = `${lineCount(page)} líneas`;
+    $$('#cardIndex [data-idx]').forEach(li => {
+      const a = +li.dataset.idx === i;
+      li.className = `flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-xs transition-all duration-300 ${a ? 'bg-indigo-500/10 text-white ring-1 ring-inset ring-indigo-400/30' : 'text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200'}`;
+      if (a) li.scrollIntoView({ block: 'nearest' });
+    });
+  }
+
+  function renderSimView() {
+    repaginate();
+    const empty = !state.pages.length;
+    $('#simEmpty').classList.toggle('hidden', !empty);
+    $('#simContent').classList.toggle('hidden', empty);
+    if (empty) return;
+    const L = computeLayout();
+    const eng = state.result.engine || { label: 'Motor local' };
+    $('#simDevice').textContent = `${getDevice().short} · ${L.w}×${L.h}px`;
+    $('#btnPngLabel').textContent = `Exportar vista como imagen (${L.w}×${L.h} PNG)`;
+    $('#simInfo').textContent = `${state.pages.length} tarjetas · ${eng.label}`;
+    $('#cardIndex').innerHTML = state.pages.map((p, i) => {
+      const first = p.blocks[0].lines.find(l => l.k !== 'h') || p.blocks[0].lines[0];
+      const head = p.blocks[0].lines[0].k === 'h' ? p.blocks[0].lines[0].t : '';
+      return `<li><button type="button" data-idx="${i}"><span class="grid h-6 w-6 shrink-0 place-items-center rounded-md bg-white/5 font-mono text-[10px] font-semibold">${i + 1}</span><span class="min-w-0 flex-1 truncate">${head ? `<b class="text-violet-300">${esc(head)}</b> · ` : ''}${esc(first.t)}</span></button></li>`;
+    }).join('');
+    renderThemeToggle();
+    updateSimMeta();
+    requestAnimationFrame(mountSim);
+  }
+
+  function goCard(i, dir) {
+    if (!state.pages.length) return;
+    const n = clamp(i, 0, state.pages.length - 1);
+    if (n === state.index) return;
+    const d = dir || (n > state.index ? 'next' : 'prev');
+    state.index = n;
+    Store.set('index', n);
+    const slot = $('#watchStage [data-slot]');
+    if (slot) slot.innerHTML = screenHTML(state.pages[n], computeLayout(), simOpts(d === 'next' ? 'wn-anim-next' : 'wn-anim-prev'));
+    else mountSim();
+    updateSimMeta();
+  }
+
+  function bindSimView() {
+    $('#btnPrev').addEventListener('click', () => goCard(state.index - 1, 'prev'));
+    $('#btnNext').addEventListener('click', () => goCard(state.index + 1, 'next'));
+    $('#cardIndex').addEventListener('click', e => { const b = e.target.closest('[data-idx]'); if (b) goCard(+b.dataset.idx); });
+    $('#themeDark').addEventListener('click', () => { state.screenTheme = 'dark'; Store.set('screenTheme', 'dark'); renderThemeToggle(); mountSim(); });
+    $('#themeLight').addEventListener('click', () => { state.screenTheme = 'light'; Store.set('screenTheme', 'light'); renderThemeToggle(); mountSim(); });
+
+    const stage = $('#watchStage');
+    stage.addEventListener('click', e => {
+      const c = e.target.closest('[data-crown]');
+      if (!c) return;
+      c.classList.add('pressed'); setTimeout(() => c.classList.remove('pressed'), 150);
+      goCard(state.index >= state.pages.length - 1 ? 0 : state.index + 1, 'next');
+    });
+    let sx = null, sy = null;
+    stage.addEventListener('pointerdown', e => { if (e.target.closest('[data-slot]')) { sx = e.clientX; sy = e.clientY; } });
+    window.addEventListener('pointerup', e => {
+      if (sx == null) return;
+      const dx = e.clientX - sx, dy = e.clientY - sy;
+      sx = sy = null;
+      if (Math.abs(dx) > 36 && Math.abs(dx) > Math.abs(dy)) goCard(state.index + (dx < 0 ? 1 : -1), dx < 0 ? 'next' : 'prev');
+    });
+
+    document.addEventListener('keydown', e => {
+      if (state.view !== 3 || /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName)) return;
+      if (e.key === 'ArrowRight') { e.preventDefault(); goCard(state.index + 1, 'next'); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); goCard(state.index - 1, 'prev'); }
+      if (e.key === 'Home') goCard(0, 'prev');
+      if (e.key === 'End') goCard(state.pages.length - 1, 'next');
+    });
+
+    $('#btnCopy').addEventListener('click', async () => {
+      const ok = await copyText(pageToText(state.pages[state.index], state.result.lang));
+      toast(ok ? `Tarjeta ${state.index + 1} copiada al portapapeles.` : 'No se pudo copiar.', ok ? 'success' : 'error');
+    });
+    $('#btnCopyAll').addEventListener('click', async () => {
+      const txt = state.pages.map((p, i) => `— Tarjeta ${i + 1}/${state.pages.length} —\n${pageToText(p, state.result.lang)}`).join('\n\n');
+      const ok = await copyText(txt);
+      toast(ok ? `${state.pages.length} tarjetas copiadas.` : 'No se pudo copiar.', ok ? 'success' : 'error');
+    });
+
+    const withBusy = async (btn, fn) => {
+      const html = btn.innerHTML; btn.disabled = true;
+      btn.innerHTML = '<span class="spinner" style="width:14px;height:14px"></span>Generando…';
+      try { await document.fonts.ready; await fn(); }
+      catch (e) { console.error(e); toast(`Error al exportar: ${e.message}`, 'error'); }
+      finally { btn.disabled = false; btn.innerHTML = html; }
+    };
+    $('#btnPng').addEventListener('click', e => withBusy(e.currentTarget, async () => {
+      const c = await renderPNG(state.index);
+      const r = await saveCanvas(c, pngName(state.index));
+      if (r === 'saved') toast(`PNG de ${c.width}×${c.height}px guardado.`, 'success');
+      else if (r === 'declined') toast('Descarga cancelada.', 'info');
+      else showImages([{ canvas: c, name: pngName(state.index) }]);
+    }));
+    $('#btnPngAll').addEventListener('click', e => withBusy(e.currentTarget, async () => {
+      const shown = [];
+      let saved = 0;
+      for (let i = 0; i < state.pages.length; i++) {
+        const c = await renderPNG(i);
+        const r = await saveCanvas(c, pngName(i));
+        if (r === 'declined') { toast(saved ? `Se guardaron ${saved} imágenes; el resto se canceló.` : 'Descarga cancelada.', 'info'); return; }
+        if (r === 'shown') shown.push({ canvas: c, name: pngName(i) });
+        else saved++;
+        if (!ENV.published) await sleep(300);
+      }
+      if (shown.length) showImages(shown);
+      else toast(`${saved} imágenes guardadas.`, 'success');
+    }));
+    $('#imgModalClose').addEventListener('click', () => { $('#imgModal').hidden = true; $('#imgModalList').innerHTML = ''; });
+    $('#imgModal').addEventListener('click', e => { if (e.target.id === 'imgModal') $('#imgModalClose').click(); });
+  }
+
+  /* ======================================================================
+     Inicio
+     ====================================================================== */
+  async function init() {
+    hydrateIcons();
+    bindDeviceView();
+    bindEditorView();
+    bindSimView();
+    $$('[data-go]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); go(+el.dataset.go); }));
+    $$('#stepper .step').forEach(b => b.addEventListener('click', () => go(+b.dataset.step)));
+    window.addEventListener('hashchange', () => go(hashToView(), { push: false }));
+    $('#btnPaste').hidden = ENV.published; // el visor nunca permite leer el portapapeles
+    if (ENV.published) {
+      const onCaps = () => { renderModels(); renderApiStatus(); };
+      window.claude.use('sample').then(s => { caps.sample = s; onCaps(); }).catch(() => {});
+      window.claude.use('downloads').then(d => { caps.downloads = d; }).catch(() => {});
+    }
+
+    const onResize = debounce(() => {
+      if (state.view === 1) renderPreview();
+      if (state.view === 2 && state.result.items.length && !state.busy) renderResults();
+      if (state.view === 3) mountSim();
+    }, 120);
+    window.addEventListener('resize', onResize);
+
+    setInterval(() => { const t = timeNow(); $$('[data-clock]').forEach(el => { if (el.textContent !== t) el.textContent = t; }); }, 15000);
+
+    renderEngine();
+    try { await Promise.race([Promise.all([400, 500, 600, 700].map(w => document.fonts.load(`${w} 14px Inter`))), sleep(2500)]); } catch { /* sin fuentes web: se usa la del sistema */ }
+    go(hashToView(), { push: false });
+  }
+
+  init();
+})();
+</script>

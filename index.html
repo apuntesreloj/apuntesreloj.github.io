@@ -214,6 +214,7 @@
                 <select id="deviceSelect" class="input"></select>
               </div>
             </div>
+            <div id="brandChips" class="mb-4 flex flex-wrap gap-2" role="group" aria-label="Filtrar por marca"></div>
             <div id="deviceGrid" class="grid gap-3 sm:grid-cols-2"></div>
 
             <div id="customPanel" class="mt-4 hidden rounded-xl border border-dashed border-indigo-400/25 bg-indigo-500/[0.04] p-4">
@@ -571,11 +572,24 @@
      Catálogos
      ====================================================================== */
   const DEVICES = {
-    fit:    { id: 'fit',    name: 'Huawei Watch Fit', short: 'Watch Fit', w: 280, h: 456, diag: '1,64"', ppi: 326, panel: 'AMOLED', tag: 'Texto corto', note: 'Densidad optimizada para texto corto.' },
-    fit2:   { id: 'fit2',   name: 'Huawei Watch Fit 2', short: 'Watch Fit 2', w: 336, h: 480, diag: '1,74"', ppi: 336, panel: 'AMOLED', tag: 'Panorámico', note: 'Formato panorámico: más caracteres por línea.' },
-    gt:     { id: 'gt',     name: 'Huawei Watch GT Rectangular / Banda Pro', short: 'GT Rect. / Banda Pro', w: 240, h: 400, diag: '1,47"', ppi: 282, panel: 'AMOLED', tag: 'Compacto', note: 'Pantalla estrecha, ideal para viñetas mínimas.' },
-    custom: { id: 'custom', name: 'Pantalla Genérica Rectangular Personalizada', short: 'Personalizada', w: 300, h: 450, diag: '—', ppi: null, panel: 'Genérica', tag: 'Manual', note: 'Define ancho y alto exactos en píxeles.' }
+    fit:      { id: 'fit',      brand: 'Huawei',  name: 'Huawei Watch Fit', short: 'Watch Fit', w: 280, h: 456, diag: '1,64"', ppi: 326, panel: 'AMOLED', tag: 'Texto corto', note: 'Densidad optimizada para texto corto.' },
+    fit2:     { id: 'fit2',     brand: 'Huawei',  name: 'Huawei Watch Fit 2', short: 'Watch Fit 2', w: 336, h: 480, diag: '1,74"', ppi: 336, panel: 'AMOLED', tag: 'Panorámico', note: 'Formato panorámico: más caracteres por línea.' },
+    fit3:     { id: 'fit3',     brand: 'Huawei',  name: 'Huawei Watch Fit 3', short: 'Watch Fit 3', w: 408, h: 480, diag: '1,82"', ppi: 347, panel: 'AMOLED', tag: 'Amplio', note: 'Pantalla casi cuadrada: líneas largas y cómodas.' },
+    fit4:     { id: 'fit4',     brand: 'Huawei',  name: 'Huawei Watch Fit 4 / Fit 4 Pro', short: 'Watch Fit 4', w: 408, h: 480, diag: '1,82"', ppi: 347, panel: 'AMOLED', tag: 'Amplio', note: 'Misma pantalla en el Fit 4 y el Fit 4 Pro.' },
+    fit5:     { id: 'fit5',     brand: 'Huawei',  name: 'Huawei Watch Fit 5', short: 'Watch Fit 5', w: 408, h: 480, diag: '1,82"', ppi: 347, panel: 'AMOLED', tag: 'Nuevo', note: 'Pantalla de 2500 nits, muy legible al sol.' },
+    gt:       { id: 'gt',       brand: 'Huawei',  name: 'Huawei Watch GT Rectangular / Banda Pro', short: 'GT Rect. / Banda Pro', w: 240, h: 400, diag: '1,47"', ppi: 282, panel: 'AMOLED', tag: 'Compacto', note: 'Pantalla estrecha, ideal para viñetas mínimas.' },
+    band10:   { id: 'band10',   brand: 'Huawei',  name: 'Huawei Band 9 / Band 10', short: 'Band 9 / 10', w: 194, h: 368, diag: '1,47"', ppi: 282, panel: 'AMOLED', tag: 'Pulsera', note: 'Muy estrecha: funciona mejor con puntos ultracortos.' },
+    xband:    { id: 'xband',    brand: 'Xiaomi',  name: 'Xiaomi Smart Band 9 Pro / 10 Pro', short: 'Smart Band Pro', w: 336, h: 480, diag: '1,74"', ppi: 336, panel: 'AMOLED', tag: 'Pulsera', note: 'Pantalla rectangular amplia para ser una pulsera.' },
+    redmi5:   { id: 'redmi5',   brand: 'Xiaomi',  name: 'Redmi Watch 5', short: 'Redmi Watch 5', w: 432, h: 514, diag: '2,07"', ppi: 324, panel: 'AMOLED', tag: 'Grande', note: 'Una de las pantallas más grandes de la lista.' },
+    aw46:     { id: 'aw46',     brand: 'Apple',   name: 'Apple Watch Series 10 / 11 (46 mm)', short: 'Apple Watch 46 mm', w: 416, h: 496, diag: '—', ppi: null, panel: 'OLED LTPO', tag: 'Grande', note: 'Caja de 46 mm, pantalla siempre activa.' },
+    aw42:     { id: 'aw42',     brand: 'Apple',   name: 'Apple Watch Series 10 / 11 (42 mm)', short: 'Apple Watch 42 mm', w: 374, h: 446, diag: '—', ppi: null, panel: 'OLED LTPO', tag: 'Mediano', note: 'Caja de 42 mm, la más pequeña de la serie.' },
+    ultra3:   { id: 'ultra3',   brand: 'Apple',   name: 'Apple Watch Ultra 3 (49 mm)', short: 'Apple Watch Ultra 3', w: 422, h: 514, diag: '—', ppi: null, panel: 'OLED LTPO', tag: 'Grande', note: 'La pantalla más grande de Apple.' },
+    bip6:     { id: 'bip6',     brand: 'Amazfit', name: 'Amazfit Bip 6', short: 'Bip 6', w: 390, h: 450, diag: '1,97"', ppi: 302, panel: 'AMOLED', tag: 'Grande', note: 'Pantalla amplia a buen precio.' },
+    galfit3:  { id: 'galfit3',  brand: 'Samsung', name: 'Samsung Galaxy Fit3', short: 'Galaxy Fit3', w: 256, h: 402, diag: '1,6"', ppi: null, panel: 'AMOLED', tag: 'Pulsera', note: 'Pantalla alargada de pulsera deportiva.' },
+    venusq2:  { id: 'venusq2',  brand: 'Garmin',  name: 'Garmin Venu Sq 2', short: 'Venu Sq 2', w: 320, h: 360, diag: '1,41"', ppi: null, panel: 'AMOLED', tag: 'Cuadrado', note: 'Casi cuadrada: pocas líneas, más anchas.' },
+    custom:   { id: 'custom',   brand: 'Otro',    name: 'Pantalla Genérica Rectangular Personalizada', short: 'Personalizada', w: 300, h: 450, diag: '—', ppi: null, panel: 'Genérica', tag: 'Manual', note: 'Define ancho y alto exactos en píxeles.' }
   };
+  const BRANDS = ['Huawei', 'Xiaomi', 'Apple', 'Amazfit', 'Samsung', 'Garmin', 'Otro'];
   /* Entorno: versión publicada (visor de Claude) o archivo HTML local. */
   const ENV = { published: !!(window.claude && typeof window.claude.use === 'function') };
   const caps = { sample: null, downloads: null };
@@ -1401,8 +1415,17 @@ La célula vegetal tiene pared celular de celulosa, cloroplastos y una gran vacu
     </button>`;
   }
 
+  let brandFilter = null; // null = marca del reloj elegido
+  const currentBrand = () => brandFilter || DEVICES[state.deviceId].brand;
   function renderDeviceGrid() {
-    $('#deviceGrid').innerHTML = Object.values(DEVICES).map(d => deviceCardHTML(d, d.id === state.deviceId)).join('');
+    const brand = currentBrand();
+    const count = b => (b === 'Todos' ? Object.keys(DEVICES).length : Object.values(DEVICES).filter(d => d.brand === b).length);
+    $('#brandChips').innerHTML = ['Todos', ...BRANDS].map(b => {
+      const a = b === brand;
+      return `<button type="button" data-brand="${b}" aria-pressed="${a}" class="rounded-full border px-3 py-1.5 text-xs font-semibold transition-all duration-300 ${a ? 'border-indigo-400/60 bg-indigo-500/15 text-white' : 'border-white/10 bg-white/[0.03] text-zinc-400 hover:border-white/20 hover:text-zinc-200'}">${b === 'Otro' ? 'Personalizada' : b} <span class="ml-0.5 font-mono text-[10px] opacity-60">${count(b)}</span></button>`;
+    }).join('');
+    const list = Object.values(DEVICES).filter(d => brand === 'Todos' || d.brand === brand);
+    $('#deviceGrid').innerHTML = list.map(d => deviceCardHTML(d, d.id === state.deviceId)).join('');
     $('#deviceSelect').value = state.deviceId;
     $('#customPanel').classList.toggle('hidden', state.deviceId !== 'custom');
     $('#customW').value = state.custom.w;
@@ -1511,8 +1534,9 @@ La célula vegetal tiene pared celular de celulosa, cloroplastos y una gran vacu
   }
 
   function bindDeviceView() {
-    $('#deviceSelect').innerHTML = Object.values(DEVICES).map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('');
-    $('#deviceSelect').addEventListener('change', e => setDevice(e.target.value));
+    $('#deviceSelect').innerHTML = BRANDS.map(b => `<optgroup label="${b === 'Otro' ? 'Personalizada' : b}">${Object.values(DEVICES).filter(d => d.brand === b).map(d => `<option value="${d.id}">${esc(d.name)} · ${d.id === 'custom' ? 'manual' : `${d.w}×${d.h}`}</option>`).join('')}</optgroup>`).join('');
+    $('#deviceSelect').addEventListener('change', e => { brandFilter = null; setDevice(e.target.value); });
+    $('#brandChips').addEventListener('click', e => { const b = e.target.closest('[data-brand]'); if (!b) return; brandFilter = b.dataset.brand; renderDeviceGrid(); });
     $('#deviceGrid').addEventListener('click', e => { const b = e.target.closest('[data-device]'); if (b) setDevice(b.dataset.device); });
 
     const onCustom = commit => {
@@ -1522,7 +1546,8 @@ La célula vegetal tiene pared celular de celulosa, cloroplastos y una gran vacu
       state.custom = { w: clamp(w, 120, 1000), h: clamp(h, 120, 1000) };
       Store.set('custom', state.custom);
       if (commit) { $('#customW').value = state.custom.w; $('#customH').value = state.custom.h; }
-      $('#deviceGrid').innerHTML = Object.values(DEVICES).map(d => deviceCardHTML(d, d.id === state.deviceId)).join('');
+      const brand = currentBrand();
+      $('#deviceGrid').innerHTML = Object.values(DEVICES).filter(d => brand === 'Todos' || d.brand === brand).map(d => deviceCardHTML(d, d.id === state.deviceId)).join('');
       renderVisual(); renderPreview();
     };
     ['#customW', '#customH'].forEach(s => { $(s).addEventListener('input', () => onCustom(false)); $(s).addEventListener('change', () => onCustom(true)); });
